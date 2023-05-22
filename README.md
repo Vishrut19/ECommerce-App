@@ -1,4 +1,4 @@
-# E-Commerce App using React and GraphQL.
+# E-Commerce App using React, Redux, GraphQL and Docker.
 
 ![ezgif com-gif-maker](https://user-images.githubusercontent.com/53470896/210233665-da43839f-33e5-4ebd-8bcb-3ae80d4f1a35.gif)
 
