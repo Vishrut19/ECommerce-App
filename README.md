@@ -1,4 +1,4 @@
-# ECommerce App using React and GraphQL.
+# E-Commerce App using React and GraphQL.
 
 ![ezgif com-gif-maker](https://user-images.githubusercontent.com/53470896/210233665-da43839f-33e5-4ebd-8bcb-3ae80d4f1a35.gif)
 
@@ -8,8 +8,6 @@ This project is a basic ECommerce Website Model using React,Typescript,GraphQL, 
 - It has a dropdown for different currency and the value changes according to different currency selection.
 - A product view page.
 - A cart view, checkout and a mini cart view page too.
-
-This was a Junior React Developer Test Task for an organisation which was to be built according to the below 👇 mentioned specifications.
 
 During the development process, I used:
  - React+Typescript
@@ -41,33 +39,15 @@ During the development process, I used:
 ``` 
 git clone repository name
 ``` 
-- Then clone the GraphQL end point whose link is provided here : https://github.com/scandiweb/junior-react-endpoint and run the below mentioned commands:
+- Then install `Docker` in the system and use 
 ```
-    yarn install
+    docker-compose up
 ```
-Then
+To build the app first and then click on
 ```
-    yarn build
+    https://ecommerce-website-vishrut.netlify.app/
 ```
-Then
-```
-    yarn start
-```
-
-- After all these steps you can run the project using the following commands :
-
-```
-    npm install
-```
-Then 
-```
-    npm start
-```
-
-- After all this just click and open the deployment server 
-```
-    http://localhost:3000
-```
+To Open the App
 
 ## Future Prospect :
 
