@@ -1,57 +1,44 @@
-# E-Commerce App using React, Redux, GraphQL and Docker.
+# E-Commerce Web App  
+**React, TypeScript, Redux Toolkit & GraphQL**
 
-![ezgif com-gif-maker](https://user-images.githubusercontent.com/53470896/210233665-da43839f-33e5-4ebd-8bcb-3ae80d4f1a35.gif)
+This project is a **production-style e-commerce web application** built with React, TypeScript, Redux Toolkit, and GraphQL.  
+It demonstrates how modern online stores manage products, pricing, currency conversion, and shopping cart flows using real API-driven data.
 
+![Demo](https://user-images.githubusercontent.com/53470896/210233665-da43839f-33e5-4ebd-8bcb-3ae80d4f1a35.gif)
 
-This project is a basic ECommerce Website Model using React,Typescript,GraphQL, which consists of many functionalities such as :
-- It has category page for different category products like Tech,Clothes etc.
-- It has a dropdown for different currency and the value changes according to different currency selection.
-- A product view page.
-- A cart view, checkout and a mini cart view page too.
+## ✨ Key Features
 
-During the development process, I used:
- - React+Typescript
- - Redux-Toolkit
- - GraphQL (@tilework/opus)
+### 🛍 Product Browsing
+- Category-based product listing (Tech, Clothing, etc.)
+- Product detail pages with dynamic pricing
+- Currency selector with real-time price updates
 
- As it was a organisation's task so the GraphQL end-point was provided by them.
- 
- The project was completed in accordance with the requirements:
- 
- ## Required:
+### 🛒 Cart & Checkout
+- Global shopping cart state using Redux Toolkit
+- Mini-cart and full cart view
+- Checkout flow simulation
 
-- React. 
-- Class components.
-- Create-react-app to scaffold the application.
+### ⚡ Data & Architecture
+- GraphQL API integration for product and pricing data
+- Redux Toolkit for state management
+- Clean, scalable component structure
+- Responsive UI built for real-world usage
 
-## Allowed:
+## 🛠 Tech Stack
 
-- State management libraries (e.g. Redux, Recoil)
-- CSS-in-JS approach allowers (e.g. styled-components)
+- **Frontend:** React, TypeScript  
+- **State Management:** Redux Toolkit  
+- **API:** GraphQL  
+- **Containerization:** Docker  
+- **Deployment:** Netlify  
 
-## Prohibited:
+## 🚀 Live Demo
 
-- UI libraries (e.g. Tailwind, Material UI, Ant Design)
-- Functional components, due to the reasons described above.
+https://ecommerce-website-vishrut.netlify.app/
 
-# How to Run :
-- First Clone the Project Folder using command
-``` 
-git clone repository name
-``` 
-- Then install `Docker` in the system and use 
-```
-    docker-compose up
-```
-To build the app first and then click on
-```
-    https://ecommerce-website-vishrut.netlify.app/
-```
-To Open the App
+## 📦 Run Locally
 
-## Future Prospect :
-
-- Those who are interested can contribute to this project.
-- In future planning to add more and more functionalities.
-- In future planning to add dummy payment gateway also.
-- Improve the UI of the web app.
+```bash
+git clone https://github.com/Vishrut19/ECommerce-App
+cd <project-folder>
+docker-compose up
