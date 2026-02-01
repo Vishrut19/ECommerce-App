@@ -71,9 +71,11 @@ export function SiteHeader() {
                             <Button variant="ghost" size="icon" className="h-9 w-9">
                                 <Search className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="icon" className="h-9 w-9">
-                                <User className="h-4 w-4" />
-                            </Button>
+                            <Link href="/admin/login">
+                                <Button variant="ghost" size="icon" className="h-9 w-9">
+                                    <User className="h-4 w-4" />
+                                </Button>
+                            </Link>
                             <Link href="/cart">
                                 <Button variant="ghost" size="icon" className="relative h-9 w-9">
                                     <ShoppingCart className="h-4 w-4" />
