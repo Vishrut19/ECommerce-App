@@ -4,7 +4,7 @@ import { useProducts } from '@/hooks/use-products';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
-import { Package, ShoppingBag, Users, ArrowRight, LogOut } from 'lucide-react';
+import { Package, ShoppingBag, Users, ArrowRight, LogOut, LayoutDashboard } from 'lucide-react';
 import { useSession, signOut } from '@/lib/auth-client';
 import { useRouter } from 'next/navigation';
 
@@ -22,19 +22,25 @@ export default function AdminDashboardPage() {
     };
 
     return (
-        <div className="container mx-auto px-4 py-8">
-            <div className="flex justify-between items-center mb-8">
+        <div className="container mx-auto px-4 py-24 animate-in fade-in duration-1000">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 mb-16">
                 <div>
-                    <h1 className="text-4xl font-bold">Admin Dashboard</h1>
-                    <p className="text-muted-foreground mt-2">
-                        Welcome back, {session?.user?.email}
+                    <div className="flex items-center gap-2 text-primary mb-2">
+                        <LayoutDashboard className="w-4 h-4" />
+                        <span className="text-xs uppercase tracking-[0.3em] font-bold">Terminal</span>
+                    </div>
+                    <h1 className="text-5xl md:text-6xl font-bold tracking-tighter">DASHBOARD</h1>
+                    <p className="text-muted-foreground mt-4 text-sm font-medium">
+                        Connected as <span className="text-foreground">{session?.user?.email}</span>
                     </p>
                 </div>
-                <div className="flex gap-2">
-                    <Button asChild variant="outline">
-                        <Link href="/">← Back to Store</Link>
-                    </Button>
-                    <Button variant="destructive" onClick={handleLogout}>
+                <div className="flex gap-4">
+                    <Link href="/">
+                        <Button variant="outline" className="rounded-none h-12 px-8 uppercase tracking-widest text-xs font-bold">
+                            View Store
+                        </Button>
+                    </Link>
+                    <Button variant="destructive" onClick={handleLogout} className="rounded-none h-12 px-8 uppercase tracking-widest text-xs font-bold">
                         <LogOut className="mr-2 h-4 w-4" />
                         Logout
                     </Button>
@@ -42,76 +48,70 @@ export default function AdminDashboardPage() {
             </div>
 
             {/* Stats Cards */}
-            <div className="grid md:grid-cols-3 gap-6 mb-8">
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Total Products</CardTitle>
-                        <Package className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{products?.length || 0}</div>
-                        <p className="text-xs text-muted-foreground">
-                            {inStockProducts} in stock
-                        </p>
-                    </CardContent>
-                </Card>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+                <div className="bg-muted/30 border border-border/40 p-8 space-y-4">
+                    <div className="flex items-center justify-between">
+                        <span className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground">Total Inventory</span>
+                        <Package className="h-4 w-4 text-primary" />
+                    </div>
+                    <div className="text-4xl font-bold tracking-tighter">{products?.length || 0}</div>
+                    <div className="text-[10px] uppercase tracking-widest font-bold text-primary">
+                        {inStockProducts} Units Available
+                    </div>
+                </div>
 
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Tech Products</CardTitle>
-                        <ShoppingBag className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{techProducts}</div>
-                    </CardContent>
-                </Card>
+                <div className="bg-muted/30 border border-border/40 p-8 space-y-4">
+                    <div className="flex items-center justify-between">
+                        <span className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground">Tech Segment</span>
+                        <ShoppingBag className="h-4 w-4 text-primary" />
+                    </div>
+                    <div className="text-4xl font-bold tracking-tighter">{techProducts}</div>
+                    <div className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground">
+                        Active SKUs
+                    </div>
+                </div>
 
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Clothes</CardTitle>
-                        <Users className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{clothesProducts}</div>
-                    </CardContent>
-                </Card>
+                <div className="bg-muted/30 border border-border/40 p-8 space-y-4">
+                    <div className="flex items-center justify-between">
+                        <span className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground">Fashion Segment</span>
+                        <Users className="h-4 w-4 text-primary" />
+                    </div>
+                    <div className="text-4xl font-bold tracking-tighter">{clothesProducts}</div>
+                    <div className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground">
+                        Active SKUs
+                    </div>
+                </div>
             </div>
 
             {/* Quick Actions */}
-            <div className="grid md:grid-cols-2 gap-6">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Product Management</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <p className="text-sm text-muted-foreground">
-                            Manage your product catalog with advanced table features including sorting, filtering, and pagination.
-                        </p>
-                        <Button asChild className="w-full">
-                            <Link href="/admin/products">
-                                Manage Products
-                                <ArrowRight className="ml-2 h-4 w-4" />
-                            </Link>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="border border-border/40 p-12 space-y-8 group hover:bg-muted/10 transition-colors">
+                    <h3 className="text-2xl font-bold tracking-tighter uppercase">Catalog Management</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                        Control your global product inventory with granular attribute management, 
+                        real-time stock tracking, and advanced categorization.
+                    </p>
+                    <Link href="/admin/products" className="block">
+                        <Button className="w-full h-14 rounded-none uppercase tracking-[0.2em] font-bold group-hover:bg-primary group-hover:text-primary-foreground">
+                            Open Catalog
+                            <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                         </Button>
-                    </CardContent>
-                </Card>
+                    </Link>
+                </div>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Order Management</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <p className="text-sm text-muted-foreground">
-                            Track and manage customer orders with status filtering, order details, and analytics.
-                        </p>
-                        <Button asChild className="w-full">
-                            <Link href="/admin/orders">
-                                Manage Orders
-                                <ArrowRight className="ml-2 h-4 w-4" />
-                            </Link>
+                <div className="border border-border/40 p-12 space-y-8 group hover:bg-muted/10 transition-colors">
+                    <h3 className="text-2xl font-bold tracking-tighter uppercase">Order Fulfillment</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                        Monitor global logistics, manage customer transactions, and analyze sales performance 
+                        metrics through our unified fulfillment interface.
+                    </p>
+                    <Link href="/admin/orders" className="block">
+                        <Button className="w-full h-14 rounded-none uppercase tracking-[0.2em] font-bold group-hover:bg-primary group-hover:text-primary-foreground">
+                            Review Orders
+                            <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                         </Button>
-                    </CardContent>
-                </Card>
+                    </Link>
+                </div>
             </div>
         </div>
     );

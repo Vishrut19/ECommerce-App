@@ -10,7 +10,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { ShoppingCart } from 'lucide-react';
+import { ShoppingCart, Search, User } from 'lucide-react';
 import { useCartStore } from '@/store/cart-store';
 import { useCurrencies } from '@/hooks/use-currencies';
 import { useState, useEffect } from 'react';
@@ -21,67 +21,70 @@ export function SiteHeader() {
     const [itemCount, setItemCount] = useState(0);
     const [mounted, setMounted] = useState(false);
 
-    // Only show cart count after client-side hydration to prevent hydration mismatch
     useEffect(() => {
         setMounted(true);
         setItemCount(getItemCount());
     }, [getItemCount]);
 
     return (
-        <header className="border-b sticky top-0 bg-background z-50">
+        <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
             <div className="container mx-auto px-4">
-                <div className="flex items-center justify-between h-16">
-                    {/* Logo */}
-                    <Link href="/" className="text-2xl font-bold">
-                        E-Store
-                    </Link>
-
-                    {/* Navigation */}
-                    <nav className="hidden md:flex items-center gap-6">
-                        <Link href="/tech" className="hover:text-primary transition-colors">
-                            Tech
+                <div className="flex items-center justify-between h-20">
+                    <div className="flex items-center gap-12">
+                        <Link href="/" className="text-2xl font-bold tracking-tighter font-display">
+                            LUMINA
                         </Link>
-                        <Link href="/clothes" className="hover:text-primary transition-colors">
-                            Clothes
-                        </Link>
-                    </nav>
 
-                    {/* Actions */}
-                    <div className="flex items-center gap-4">
-                        {/* Currency Selector */}
-                        <Select
-                            value={selectedCurrency.label}
-                            onValueChange={(value) => {
-                                const currency = currencies?.find(c => c.label === value);
-                                if (currency) setSelectedCurrency(currency);
-                            }}
-                        >
-                            <SelectTrigger className="w-24">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {currencies?.map((currency) => (
-                                    <SelectItem key={currency.label} value={currency.label}>
-                                        {currency.symbol} {currency.label}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                        <nav className="hidden md:flex items-center gap-8 text-sm font-medium">
+                            <Link href="/tech" className="hover:text-primary transition-colors uppercase tracking-widest text-[10px]">
+                                Technology
+                            </Link>
+                            <Link href="/clothes" className="hover:text-primary transition-colors uppercase tracking-widest text-[10px]">
+                                Fashion
+                            </Link>
+                        </nav>
+                    </div>
 
-                        {/* Cart Button */}
-                        <Link href="/cart">
-                            <Button variant="outline" size="icon" className="relative">
-                                <ShoppingCart className="h-5 w-5" />
-                                {mounted && itemCount > 0 && (
-                                    <Badge
-                                        variant="destructive"
-                                        className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs"
-                                    >
-                                        {itemCount}
-                                    </Badge>
-                                )}
+                    <div className="flex items-center gap-6">
+                        <div className="hidden sm:flex items-center gap-2">
+                            <Select
+                                value={selectedCurrency.label}
+                                onValueChange={(value) => {
+                                    const currency = currencies?.find(c => c.label === value);
+                                    if (currency) setSelectedCurrency(currency);
+                                }}
+                            >
+                                <SelectTrigger className="w-[80px] h-8 text-[10px] uppercase tracking-widest bg-transparent border-none hover:bg-muted focus:ring-0">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {currencies?.map((currency) => (
+                                        <SelectItem key={currency.label} value={currency.label} className="text-[10px] uppercase tracking-widest">
+                                            {currency.symbol} {currency.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                            <Button variant="ghost" size="icon" className="h-9 w-9">
+                                <Search className="h-4 w-4" />
                             </Button>
-                        </Link>
+                            <Button variant="ghost" size="icon" className="h-9 w-9">
+                                <User className="h-4 w-4" />
+                            </Button>
+                            <Link href="/cart">
+                                <Button variant="ghost" size="icon" className="relative h-9 w-9">
+                                    <ShoppingCart className="h-4 w-4" />
+                                    {mounted && itemCount > 0 && (
+                                        <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary text-[8px] font-bold text-primary-foreground flex items-center justify-center animate-in zoom-in">
+                                            {itemCount}
+                                        </span>
+                                    )}
+                                </Button>
+                            </Link>
+                        </div>
                     </div>
                 </div>
             </div>

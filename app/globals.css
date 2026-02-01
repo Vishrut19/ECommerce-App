@@ -2,7 +2,7 @@
 
 /* Shadcn UI theme tokens (CSS variables). */
 :root {
-  --radius: 0.625rem;
+  --radius: 0rem; /* Modern sharp edges for a more professional/architectural look */
 
   --background: hsl(0 0% 100%);
   --foreground: hsl(0 0% 3.9%);
@@ -13,7 +13,7 @@
   --popover: hsl(0 0% 100%);
   --popover-foreground: hsl(0 0% 3.9%);
 
-  --primary: hsl(0 0% 9%);
+  --primary: hsl(0 0% 0%);
   --primary-foreground: hsl(0 0% 98%);
 
   --secondary: hsl(0 0% 96.1%);
@@ -33,36 +33,34 @@
   --ring: hsl(0 0% 3.9%);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: hsl(0 0% 3.9%);
-    --foreground: hsl(0 0% 98%);
+.dark {
+  --background: hsl(0 0% 2%);
+  --foreground: hsl(0 0% 98%);
 
-    --card: hsl(0 0% 3.9%);
-    --card-foreground: hsl(0 0% 98%);
+  --card: hsl(0 0% 4%);
+  --card-foreground: hsl(0 0% 98%);
 
-    --popover: hsl(0 0% 3.9%);
-    --popover-foreground: hsl(0 0% 98%);
+  --popover: hsl(0 0% 3.9%);
+  --popover-foreground: hsl(0 0% 98%);
 
-    --primary: hsl(0 0% 98%);
-    --primary-foreground: hsl(0 0% 9%);
+  --primary: hsl(0 0% 100%);
+  --primary-foreground: hsl(0 0% 0%);
 
-    --secondary: hsl(0 0% 14.9%);
-    --secondary-foreground: hsl(0 0% 98%);
+  --secondary: hsl(0 0% 10%);
+  --secondary-foreground: hsl(0 0% 98%);
 
-    --muted: hsl(0 0% 14.9%);
-    --muted-foreground: hsl(0 0% 63.9%);
+  --muted: hsl(0 0% 10%);
+  --muted-foreground: hsl(0 0% 63.9%);
 
-    --accent: hsl(0 0% 14.9%);
-    --accent-foreground: hsl(0 0% 98%);
+  --accent: hsl(0 0% 10%);
+  --accent-foreground: hsl(0 0% 98%);
 
-    --destructive: hsl(0 62.8% 30.6%);
-    --destructive-foreground: hsl(0 0% 98%);
+  --destructive: hsl(0 62.8% 30.6%);
+  --destructive-foreground: hsl(0 0% 98%);
 
-    --border: hsl(0 0% 14.9%);
-    --input: hsl(0 0% 14.9%);
-    --ring: hsl(0 0% 83.1%);
-  }
+  --border: hsl(0 0% 15%);
+  --input: hsl(0 0% 15%);
+  --ring: hsl(0 0% 83.1%);
 }
 
 @theme inline {
@@ -87,8 +85,8 @@
   --color-ring: var(--ring);
   --radius: var(--radius);
 
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
 }
 
 @layer base {
@@ -97,6 +95,28 @@
   }
 
   body {
-    @apply bg-background text-foreground antialiased;
+    @apply bg-background text-foreground antialiased font-sans;
   }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display tracking-tight;
+  }
+}
+
+.glass {
+  @apply bg-background/60 backdrop-blur-md border border-border/40;
+}
+
+.text-gradient {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/50;
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
 }
