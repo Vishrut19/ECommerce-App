@@ -9,7 +9,8 @@
     "lint": "eslint",
     "init-db": "tsx scripts/init-db.ts",
     "create-admin": "tsx scripts/create-admin.ts",
-    "check-admin": "tsx scripts/check-admin.ts"
+    "check-admin": "tsx scripts/check-admin.ts",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
