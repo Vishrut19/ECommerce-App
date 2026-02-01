@@ -9,3 +9,4 @@ auth.db
 .cursor
 .env
 .env.local
+.orchids
