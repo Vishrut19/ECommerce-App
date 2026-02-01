@@ -14,6 +14,7 @@ import {
 } from '@tanstack/react-table';
 import { useState } from 'react';
 import { apiClient } from '@/lib/api-client';
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -33,7 +34,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { ArrowUpDown, Search, Eye } from 'lucide-react';
+import { ArrowUpDown, Search, Eye, Loader2 } from 'lucide-react';
 import {
     Dialog,
     DialogContent,
@@ -162,7 +163,7 @@ function OrderDetailsDialog({ order }: { order: Order }) {
             </DialogTrigger>
             <DialogContent className="rounded-none border-border/40 bg-background p-12 max-w-2xl overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-1 bg-primary/20" />
-                
+
                 <DialogHeader className="space-y-4 mb-8">
                     <div className="flex items-center gap-2 text-primary">
                         <span className="text-[10px] uppercase tracking-[0.4em] font-bold">Transaction Report</span>
@@ -358,9 +359,9 @@ export default function OrdersPage() {
                         <p className={cn(
                             "text-xl font-bold tracking-tighter tabular-nums",
                             stat.color === 'yellow' ? "text-yellow-500" :
-                            stat.color === 'blue' ? "text-blue-500" :
-                            stat.color === 'green' ? "text-green-500" :
-                            stat.color === 'destructive' ? "text-destructive" : ""
+                                stat.color === 'blue' ? "text-blue-500" :
+                                    stat.color === 'green' ? "text-green-500" :
+                                        stat.color === 'destructive' ? "text-destructive" : ""
                         )}>{stat.value}</p>
                     </div>
                 ))}
@@ -380,7 +381,7 @@ export default function OrdersPage() {
                             className="h-12 pl-12 rounded-none border-border/40 bg-background/50 text-[10px] uppercase tracking-widest font-bold focus:ring-1 focus:ring-primary"
                         />
                     </div>
-                    
+
                     <Select value={statusFilter} onValueChange={setStatusFilter}>
                         <SelectTrigger className="w-[200px] h-12 rounded-none border-border/40 bg-background/50 text-[10px] uppercase tracking-widest font-bold">
                             <SelectValue placeholder="PROCESS STATUS" />
