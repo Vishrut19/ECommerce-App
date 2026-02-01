@@ -2,115 +2,168 @@
 
 import { useProducts } from '@/hooks/use-products';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
-import { Package, ShoppingBag, Users, ArrowRight, LogOut, LayoutDashboard } from 'lucide-react';
-import { useSession, signOut } from '@/lib/auth-client';
-import { useRouter } from 'next/navigation';
+import { Package, ShoppingBag, Users, ArrowRight, LayoutDashboard } from 'lucide-react';
+import { useSession } from '@/lib/auth-client';
+import { cn } from '@/lib/utils';
 
 export default function AdminDashboardPage() {
     const { data: products } = useProducts();
     const { data: session } = useSession();
-    const router = useRouter();
+    
     const techProducts = products?.filter(p => p.category === 'tech').length || 0;
     const clothesProducts = products?.filter(p => p.category === 'clothes').length || 0;
     const inStockProducts = products?.filter(p => p.inStock).length || 0;
+    const lowStockProducts = products?.filter(p => p.inStock && (p as any).stock < 10).length || 0;
 
-    const handleLogout = async () => {
-        await signOut();
-        router.push('/admin/login');
-    };
+    const stats = [
+        {
+            label: 'Total Inventory',
+            value: products?.length || 0,
+            subValue: `${inStockProducts} Active SKUs`,
+            icon: Package,
+            trend: '+2.4%',
+            color: 'primary'
+        },
+        {
+            label: 'Tech Segment',
+            value: techProducts,
+            subValue: 'Active Inventory',
+            icon: ShoppingBag,
+            trend: '+1.2%',
+            color: 'primary'
+        },
+        {
+            label: 'Fashion Segment',
+            value: clothesProducts,
+            subValue: 'Active Inventory',
+            icon: Users,
+            trend: '-0.4%',
+            color: 'primary'
+        }
+    ];
 
     return (
-        <div className="container mx-auto px-4 py-24 animate-in fade-in duration-1000">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 mb-16">
-                <div>
-                    <div className="flex items-center gap-2 text-primary mb-2">
-                        <LayoutDashboard className="w-4 h-4" />
-                        <span className="text-xs uppercase tracking-[0.3em] font-bold">Terminal</span>
-                    </div>
-                    <h1 className="text-5xl md:text-6xl font-bold tracking-tighter">DASHBOARD</h1>
-                    <p className="text-muted-foreground mt-4 text-sm font-medium">
-                        Connected as <span className="text-foreground">{session?.user?.email}</span>
-                    </p>
-                </div>
-                <div className="flex gap-4">
-                    <Link href="/">
-                        <Button variant="outline" className="rounded-none h-12 px-8 uppercase tracking-widest text-xs font-bold">
-                            View Store
-                        </Button>
-                    </Link>
-                    <Button variant="destructive" onClick={handleLogout} className="rounded-none h-12 px-8 uppercase tracking-widest text-xs font-bold">
-                        <LogOut className="mr-2 h-4 w-4" />
-                        Logout
-                    </Button>
-                </div>
+        <div className="space-y-12 animate-in fade-in duration-700">
+            {/* Hero Section */}
+            <div className="flex flex-col gap-4">
+                <h2 className="text-4xl font-bold tracking-tighter uppercase">Command Center</h2>
+                <p className="text-sm text-muted-foreground uppercase tracking-[0.2em] font-medium max-w-2xl">
+                    Unified interface for LUMINA operations. Monitor inventory, manage fulfillment, and analyze system performance metrics in real-time.
+                </p>
             </div>
 
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-                <div className="bg-muted/30 border border-border/40 p-8 space-y-4">
-                    <div className="flex items-center justify-between">
-                        <span className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground">Total Inventory</span>
-                        <Package className="h-4 w-4 text-primary" />
-                    </div>
-                    <div className="text-4xl font-bold tracking-tighter">{products?.length || 0}</div>
-                    <div className="text-[10px] uppercase tracking-widest font-bold text-primary">
-                        {inStockProducts} Units Available
-                    </div>
-                </div>
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {stats.map((stat, i) => (
+                    <div key={i} className="group relative overflow-hidden border border-border/40 bg-muted/20 p-8 transition-all hover:border-primary/50">
+                        <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                            <stat.icon className="h-24 w-24 -mr-8 -mt-8" />
+                        </div>
+                        
+                        <div className="relative z-10 space-y-4">
+                            <div className="flex items-center justify-between">
+                                <span className="text-[10px] uppercase tracking-[0.3em] font-bold text-muted-foreground">{stat.label}</span>
+                                <stat.icon className="h-4 w-4 text-primary" />
+                            </div>
+                            <div className="flex items-baseline gap-4">
+                                <span className="text-5xl font-bold tracking-tighter">{stat.value}</span>
+                                <span className={cn(
+                                    "text-[10px] font-bold tracking-widest px-2 py-0.5 border",
+                                    stat.trend.startsWith('+') ? "text-green-500 border-green-500/20 bg-green-500/5" : "text-red-500 border-red-500/20 bg-red-500/5"
+                                )}>
+                                    {stat.trend}
+                                </span>
+                            </div>
+                            <p className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground/60">{stat.subValue}</p>
+                        </div>
 
-                <div className="bg-muted/30 border border-border/40 p-8 space-y-4">
-                    <div className="flex items-center justify-between">
-                        <span className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground">Tech Segment</span>
-                        <ShoppingBag className="h-4 w-4 text-primary" />
+                        <div className="absolute bottom-0 left-0 w-full h-1 bg-primary/10 group-hover:bg-primary/30 transition-colors" />
                     </div>
-                    <div className="text-4xl font-bold tracking-tighter">{techProducts}</div>
-                    <div className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground">
-                        Active SKUs
-                    </div>
-                </div>
-
-                <div className="bg-muted/30 border border-border/40 p-8 space-y-4">
-                    <div className="flex items-center justify-between">
-                        <span className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground">Fashion Segment</span>
-                        <Users className="h-4 w-4 text-primary" />
-                    </div>
-                    <div className="text-4xl font-bold tracking-tighter">{clothesProducts}</div>
-                    <div className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground">
-                        Active SKUs
-                    </div>
-                </div>
+                ))}
             </div>
 
-            {/* Quick Actions */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="border border-border/40 p-12 space-y-8 group hover:bg-muted/10 transition-colors">
-                    <h3 className="text-2xl font-bold tracking-tighter uppercase">Catalog Management</h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                        Control your global product inventory with granular attribute management, 
-                        real-time stock tracking, and advanced categorization.
-                    </p>
-                    <Link href="/admin/products" className="block">
-                        <Button className="w-full h-14 rounded-none uppercase tracking-[0.2em] font-bold group-hover:bg-primary group-hover:text-primary-foreground">
-                            Open Catalog
-                            <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-                        </Button>
-                    </Link>
+            {/* Main Content Area */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+                {/* System Status */}
+                <div className="lg:col-span-2 space-y-8">
+                    <div className="flex items-center justify-between border-b border-border/10 pb-4">
+                        <h3 className="text-xl font-bold tracking-tighter uppercase">Operational Status</h3>
+                        <div className="flex items-center gap-2">
+                            <div className="h-2 w-2 rounded-full bg-green-500" />
+                            <span className="text-[10px] uppercase tracking-widest font-bold text-green-500">All Systems Nominal</span>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="border border-border/40 p-8 space-y-6 group hover:bg-muted/30 transition-all">
+                            <div className="flex items-center gap-4">
+                                <div className="w-10 h-10 border border-border/40 flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                                    <Package className="h-4 w-4" />
+                                </div>
+                                <h4 className="font-bold tracking-tighter uppercase">Inventory Core</h4>
+                            </div>
+                            <p className="text-xs text-muted-foreground leading-relaxed font-medium uppercase tracking-wider">
+                                Manage your global product database. Update SKUs, adjust pricing, and control visibility across segments.
+                            </p>
+                            <Link href="/admin/products">
+                                <Button variant="outline" className="w-full rounded-none h-12 uppercase tracking-[0.2em] text-[10px] font-bold hover:bg-primary hover:text-primary-foreground transition-all">
+                                    Access Catalog
+                                    <ArrowRight className="ml-2 h-3 w-3" />
+                                </Button>
+                            </Link>
+                        </div>
+
+                        <div className="border border-border/40 p-8 space-y-6 group hover:bg-muted/30 transition-all">
+                            <div className="flex items-center gap-4">
+                                <div className="w-10 h-10 border border-border/40 flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                                    <ShoppingBag className="h-4 w-4" />
+                                </div>
+                                <h4 className="font-bold tracking-tighter uppercase">Fulfillment Engine</h4>
+                            </div>
+                            <p className="text-xs text-muted-foreground leading-relaxed font-medium uppercase tracking-wider">
+                                Process customer transactions, track logistics, and manage order lifecycles from initiation to delivery.
+                            </p>
+                            <Link href="/admin/orders">
+                                <Button variant="outline" className="w-full rounded-none h-12 uppercase tracking-[0.2em] text-[10px] font-bold hover:bg-primary hover:text-primary-foreground transition-all">
+                                    Review Orders
+                                    <ArrowRight className="ml-2 h-3 w-3" />
+                                </Button>
+                            </Link>
+                        </div>
+                    </div>
                 </div>
 
-                <div className="border border-border/40 p-12 space-y-8 group hover:bg-muted/10 transition-colors">
-                    <h3 className="text-2xl font-bold tracking-tighter uppercase">Order Fulfillment</h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                        Monitor global logistics, manage customer transactions, and analyze sales performance 
-                        metrics through our unified fulfillment interface.
-                    </p>
-                    <Link href="/admin/orders" className="block">
-                        <Button className="w-full h-14 rounded-none uppercase tracking-[0.2em] font-bold group-hover:bg-primary group-hover:text-primary-foreground">
-                            Review Orders
-                            <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-                        </Button>
-                    </Link>
+                {/* Activity Feed */}
+                <div className="space-y-8">
+                    <div className="flex items-center justify-between border-b border-border/10 pb-4">
+                        <h3 className="text-xl font-bold tracking-tighter uppercase">System Logs</h3>
+                        <Link href="#" className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground hover:text-primary transition-colors">View All</Link>
+                    </div>
+
+                    <div className="space-y-6">
+                        {[
+                            { event: 'New Order Received', time: '2m ago', id: '#ORD-9421', type: 'success' },
+                            { event: 'Inventory Low: Tech Segment', time: '14m ago', id: 'SKU-8829', type: 'warning' },
+                            { event: 'Database Sync Complete', time: '1h ago', id: 'SYS-SYNC', type: 'info' },
+                            { event: 'Admin Session Initiated', time: '2h ago', id: 'USR-ADMIN', type: 'info' },
+                        ].map((log, i) => (
+                            <div key={i} className="flex gap-4 group cursor-default">
+                                <div className={cn(
+                                    "w-1 mt-1 shrink-0 h-10",
+                                    log.type === 'success' ? "bg-green-500" : 
+                                    log.type === 'warning' ? "bg-yellow-500" : "bg-primary/20"
+                                )} />
+                                <div className="flex-1 space-y-1">
+                                    <div className="flex items-center justify-between">
+                                        <p className="text-[10px] font-bold uppercase tracking-widest group-hover:text-primary transition-colors">{log.event}</p>
+                                        <span className="text-[9px] text-muted-foreground font-bold">{log.time}</span>
+                                    </div>
+                                    <p className="text-[9px] text-muted-foreground uppercase tracking-widest font-bold">{log.id}</p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </div>
         </div>
