@@ -4,13 +4,22 @@ import { useProducts } from '@/hooks/use-products';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
-import { Package, ShoppingBag, Users, ArrowRight } from 'lucide-react';
+import { Package, ShoppingBag, Users, ArrowRight, LogOut } from 'lucide-react';
+import { useSession, signOut } from '@/lib/auth-client';
+import { useRouter } from 'next/navigation';
 
 export default function AdminDashboardPage() {
     const { data: products } = useProducts();
+    const { data: session } = useSession();
+    const router = useRouter();
     const techProducts = products?.filter(p => p.category === 'tech').length || 0;
     const clothesProducts = products?.filter(p => p.category === 'clothes').length || 0;
     const inStockProducts = products?.filter(p => p.inStock).length || 0;
+
+    const handleLogout = async () => {
+        await signOut();
+        router.push('/admin/login');
+    };
 
     return (
         <div className="container mx-auto px-4 py-8">
@@ -18,12 +27,18 @@ export default function AdminDashboardPage() {
                 <div>
                     <h1 className="text-4xl font-bold">Admin Dashboard</h1>
                     <p className="text-muted-foreground mt-2">
-                        Manage your e-commerce store
+                        Welcome back, {session?.user?.email}
                     </p>
                 </div>
-                <Button asChild>
-                    <Link href="/">← Back to Store</Link>
-                </Button>
+                <div className="flex gap-2">
+                    <Button asChild variant="outline">
+                        <Link href="/">← Back to Store</Link>
+                    </Button>
+                    <Button variant="destructive" onClick={handleLogout}>
+                        <LogOut className="mr-2 h-4 w-4" />
+                        Logout
+                    </Button>
+                </div>
             </div>
 
             {/* Stats Cards */}

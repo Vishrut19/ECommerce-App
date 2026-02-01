@@ -1,0 +1,213 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// User model for authentication
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  password      String?
+  role          String    @default("user") // "user" or "admin"
+  emailVerified Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+
+  image String?
+
+  @@map("users")
+}
+
+// Session model for Better Auth
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  expiresAt DateTime
+  token     String   @unique
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+  @@index([userId])
+}
+
+// Account model for Better Auth (supports both OAuth and credentials)
+
+model Account {
+  id                String   @id @default(cuid())
+  userId            String
+  type              String?  // Optional - not used by Better Auth
+  provider          String?  // Optional - not used by Better Auth
+  providerAccountId String?  // Optional - not used by Better Auth
+  password          String? // For credential provider only
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Better Auth fields
+  accountId             String
+  providerId            String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+
+  @@unique([accountId, providerId])
+  @@map("accounts")
+  @@index([userId])
+}
+
+
+// Category model
+
+model Category {
+  id        String    @id @default(cuid())
+  name      String    @unique // "tech" or "clothes"
+  title     String // Display title
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  products  Product[]
+
+  @@map("categories")
+}
+
+// Product model
+
+model Product {
+  id          String             @id @default(cuid())
+  name        String
+  brand       String
+  categoryId  String
+  description String             @db.Text
+  inStock     Boolean            @default(true)
+  gallery     String[] // Array of image URLs
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  category    Category           @relation(fields: [categoryId], references: [id])
+  prices      ProductPrice[]
+  attributes  ProductAttribute[]
+
+  @@map("products")
+}
+
+// Product Price model (for multi-currency support)
+
+model ProductPrice {
+  id           String   @id @default(cuid())
+  productId    String
+  currencyCode String // "USD", "GBP", etc.
+  amount       Float
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  product      Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, currencyCode])
+  @@map("product_prices")
+}
+
+// Product Attribute model (for colors, sizes, etc.)
+
+model ProductAttribute {
+  id        String                 @id @default(cuid())
+  productId String
+  name      String // "Color", "Size", "Capacity"
+  type      String // "text" or "swatch"
+  createdAt DateTime               @default(now())
+  updatedAt DateTime               @updatedAt
+  product   Product                @relation(fields: [productId], references: [id], onDelete: Cascade)
+  items     ProductAttributeItem[]
+
+  @@map("product_attributes")
+}
+
+// Product Attribute Item model
+
+model ProductAttributeItem {
+  id           String           @id @default(cuid())
+  attributeId  String
+  displayValue String
+  value        String
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  attribute    ProductAttribute @relation(fields: [attributeId], references: [id], onDelete: Cascade)
+
+  @@map("product_attribute_items")
+}
+
+// Currency model
+
+model Currency {
+  id        String   @id @default(cuid())
+  code      String   @unique // "USD", "GBP", etc.
+  symbol    String // "$", "£", etc.
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("currencies")
+}
+
+// Order model (for future implementation)
+
+model Order {
+  id        String      @id @default(cuid())
+  userId    String?
+  total     Float
+  currency  String
+  status    String      @default("pending") // "pending", "processing", "completed", "cancelled"
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  items     OrderItem[]
+
+  @@map("orders")
+}
+
+// Order Item model
+
+model OrderItem {
+  id          String   @id @default(cuid())
+  orderId     String
+  productId   String
+  productName String
+  quantity    Int
+  price       Float
+  attributes  Json? // Store selected attributes as JSON
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("order_items")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}

@@ -1,3 +1,9 @@
 .DS_Store
 node_modules
 .next
+auth.db
+.env.local
+/lib/generated/prisma
+.agents
+.claude
+.cursor
