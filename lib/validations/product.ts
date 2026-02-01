@@ -11,9 +11,7 @@ const attributeItemSchema = z.object({
 const attributeSetSchema = z.object({
   id: z.string().min(1, 'Attribute ID is required'),
   name: z.string().min(1, 'Attribute name is required'),
-  type: z.enum(['text', 'swatch'], {
-    errorMap: () => ({ message: 'Type must be either text or swatch' }),
-  }),
+  type: z.enum(['text', 'swatch']).catch('text'),
   items: z.array(attributeItemSchema).min(1, 'At least one attribute item is required'),
 });
 
@@ -21,9 +19,7 @@ const attributeSetSchema = z.object({
 export const productFormSchema = z.object({
   name: z.string().min(1, 'Product name is required').max(100, 'Name is too long'),
   brand: z.string().min(1, 'Brand is required').max(50, 'Brand name is too long'),
-  category: z.enum(['tech', 'clothes'], {
-    errorMap: () => ({ message: 'Please select a valid category' }),
-  }),
+  category: z.enum(['tech', 'clothes']).catch('tech'),
   description: z.string().min(10, 'Description must be at least 10 characters'),
   inStock: z.boolean(),
   priceUSD: z.number().min(0.01, 'Price must be greater than 0'),

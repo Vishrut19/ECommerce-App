@@ -35,7 +35,7 @@ export default function AdminLoginPage() {
             }
 
             // Check if user has admin role
-            if (result.data?.user?.role !== 'admin') {
+            if ((result.data?.user as { role?: string } | undefined)?.role !== 'admin') {
                 setError('Access denied. Admin privileges required.');
                 setIsLoading(false);
                 return;
@@ -53,7 +53,7 @@ export default function AdminLoginPage() {
     return (
         <div className="min-h-screen flex items-center justify-center bg-background px-4 font-sans selection:bg-primary selection:text-primary-foreground">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.05)_0%,transparent_50%)] pointer-events-none" />
-            
+
             <div className="w-full max-w-md relative">
                 <div className="mb-12 text-center space-y-4">
                     <div className="inline-flex items-center justify-center w-12 h-12 border border-primary/20 bg-primary/5 mb-4">
@@ -65,7 +65,7 @@ export default function AdminLoginPage() {
 
                 <div className="border border-border/40 p-8 md:p-12 glass relative">
                     <div className="absolute -top-px left-0 w-full h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
-                    
+
                     <form onSubmit={handleSubmit} className="space-y-8">
                         {error && (
                             <div className="bg-destructive/10 border border-destructive/20 p-4 text-xs font-bold text-destructive uppercase tracking-widest animate-in fade-in slide-in-from-top-1">
@@ -103,9 +103,9 @@ export default function AdminLoginPage() {
                             />
                         </div>
 
-                        <Button 
-                            type="submit" 
-                            className="w-full h-14 rounded-none uppercase tracking-[0.3em] font-bold text-xs hover:scale-[1.01] active:scale-[0.99] transition-all" 
+                        <Button
+                            type="submit"
+                            className="w-full h-14 rounded-none uppercase tracking-[0.3em] font-bold text-xs hover:scale-[1.01] active:scale-[0.99] transition-all"
                             disabled={isLoading}
                         >
                             {isLoading ? (

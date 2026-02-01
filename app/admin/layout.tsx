@@ -23,7 +23,7 @@ export default function AdminLayout({
             router.push('/admin/login');
         }
 
-        if (!isPending && session && session.user.role !== 'admin') {
+        if (!isPending && session && (session.user as { role?: string }).role !== 'admin') {
             router.push('/');
         }
     }, [session, isPending, router, isLoginPage]);
@@ -40,7 +40,7 @@ export default function AdminLayout({
     }
 
     if (!isLoginPage) {
-        if (!session || session.user.role !== 'admin') {
+        if (!session || (session.user as { role?: string }).role !== 'admin') {
             return null;
         }
     }
@@ -52,16 +52,16 @@ export default function AdminLayout({
     return (
         <div className="min-h-screen bg-background text-foreground font-sans selection:bg-primary selection:text-primary-foreground">
             <AdminSidebar />
-            
+
             <div className="pl-72 flex flex-col min-h-screen">
                 {/* Admin Header */}
                 <header className="h-20 border-b border-border/10 bg-background/80 backdrop-blur-xl sticky top-0 z-40 px-12 flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <div className="h-2 w-2 rounded-full bg-primary" />
                         <h1 className="text-[10px] uppercase tracking-[0.4em] font-bold text-muted-foreground">
-                            {pathname === '/admin' ? 'Terminal / Dashboard' : 
-                             pathname.startsWith('/admin/products') ? 'Terminal / Inventory' : 
-                             pathname.startsWith('/admin/orders') ? 'Terminal / Fulfillment' : 'Terminal'}
+                            {pathname === '/admin' ? 'Terminal / Dashboard' :
+                                pathname.startsWith('/admin/products') ? 'Terminal / Inventory' :
+                                    pathname.startsWith('/admin/orders') ? 'Terminal / Fulfillment' : 'Terminal'}
                         </h1>
                     </div>
 
@@ -75,7 +75,7 @@ export default function AdminLayout({
                                 <Search className="h-4 w-4" />
                             </button>
                         </div>
-                        
+
                         <div className="flex items-center gap-4">
                             <div className="text-right">
                                 <p className="text-[10px] font-bold uppercase tracking-widest">{session?.user.name}</p>
