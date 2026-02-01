@@ -98,18 +98,18 @@ export default function AdminDashboardPage() {
 
                 <Card>
                     <CardHeader>
-                        <CardTitle>Coming Soon</CardTitle>
+                        <CardTitle>Order Management</CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-2">
-                        <p className="text-sm text-muted-foreground mb-4">
-                            Additional features in development:
+                    <CardContent className="space-y-4">
+                        <p className="text-sm text-muted-foreground">
+                            Track and manage customer orders with status filtering, order details, and analytics.
                         </p>
-                        <ul className="list-disc list-inside space-y-2 text-sm">
-                            <li>Order management and tracking</li>
-                            <li>Customer management</li>
-                            <li>Analytics and reports</li>
-                            <li>Inventory management</li>
-                        </ul>
+                        <Button asChild className="w-full">
+                            <Link href="/admin/orders">
+                                Manage Orders
+                                <ArrowRight className="ml-2 h-4 w-4" />
+                            </Link>
+                        </Button>
                     </CardContent>
                 </Card>
             </div>

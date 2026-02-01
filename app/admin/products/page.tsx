@@ -138,7 +138,7 @@ export default function ProductsManagementPage() {
                             size="sm"
                             asChild
                         >
-                            <Link href={`/admin/products/${product.id}/edit`}>
+                            <Link href={`/admin/products/edit?id=${product.id}`}>
                                 <Edit className="h-4 w-4" />
                             </Link>
                         </Button>
