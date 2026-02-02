@@ -1,24 +1,47 @@
 import { NextResponse } from 'next/server';
-import { currencies } from '@/data/products';
-import { ApiResponse, Currency } from '@/types';
+import prisma from '@/lib/prisma';
+import { ApiResponse, Settings } from '@/types';
 
+// For AgroOrder, we return the default currency from settings
 export async function GET() {
   try {
-    const response: ApiResponse<Currency[]> = {
+    // Get settings for currency info
+    let settings = await prisma.settings.findUnique({
+      where: { id: 'default' },
+    });
+
+    if (!settings) {
+      settings = await prisma.settings.create({
+        data: {
+          id: 'default',
+          companyName: 'AgroOrder',
+          currency: 'INR',
+          currencySymbol: '₹',
+        },
+      });
+    }
+
+    // Return single currency (INR for Indian wholesale market)
+    const currency = {
+      label: settings.currency,
+      symbol: settings.currencySymbol,
+    };
+
+    return NextResponse.json({
       success: true,
-      data: currencies,
-    };
-    
-    return NextResponse.json(response);
+      data: [currency],
+    });
   } catch (error) {
-    const response: ApiResponse<Currency[]> = {
-      success: false,
-      error: {
-        message: 'Failed to fetch currencies',
-        code: 'INTERNAL_ERROR',
+    console.error('Get currencies error:', error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: {
+          message: 'Failed to fetch currencies',
+          code: 'INTERNAL_ERROR',
+        },
       },
-    };
-    
-    return NextResponse.json(response, { status: 500 });
+      { status: 500 }
+    );
   }
 }

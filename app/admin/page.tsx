@@ -1,168 +1,225 @@
 'use client';
 
-import { useProducts } from '@/hooks/use-products';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { Package, ShoppingBag, Users, ArrowRight, LayoutDashboard } from 'lucide-react';
-import { useSession } from '@/lib/auth-client';
+import { 
+    Package, 
+    ShoppingBag, 
+    Users, 
+    ArrowRight, 
+    TrendingUp,
+    AlertTriangle,
+    CheckCircle2,
+    Clock,
+    IndianRupee
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { DashboardStats, Order } from '@/types';
 
 export default function AdminDashboardPage() {
-    const { data: products } = useProducts();
-    const { data: session } = useSession();
-    
-    const techProducts = products?.filter(p => p.category === 'tech').length || 0;
-    const clothesProducts = products?.filter(p => p.category === 'clothes').length || 0;
-    const inStockProducts = products?.filter(p => p.inStock).length || 0;
-    const lowStockProducts = products?.filter(p => p.inStock && (p as any).stock < 10).length || 0;
+    const [stats, setStats] = useState<DashboardStats | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
 
-    const stats = [
-        {
-            label: 'Total Inventory',
-            value: products?.length || 0,
-            subValue: `${inStockProducts} Active SKUs`,
-            icon: Package,
-            trend: '+2.4%',
-            color: 'primary'
-        },
-        {
-            label: 'Tech Segment',
-            value: techProducts,
-            subValue: 'Active Inventory',
-            icon: ShoppingBag,
-            trend: '+1.2%',
-            color: 'primary'
-        },
-        {
-            label: 'Fashion Segment',
-            value: clothesProducts,
-            subValue: 'Active Inventory',
-            icon: Users,
-            trend: '-0.4%',
-            color: 'primary'
+    useEffect(() => {
+        async function fetchStats() {
+            try {
+                const res = await fetch('/api/dashboard');
+                const data = await res.json();
+                if (data.success) {
+                    setStats(data.data);
+                }
+            } catch (error) {
+                console.error('Failed to fetch dashboard stats:', error);
+            } finally {
+                setIsLoading(false);
+            }
         }
+        fetchStats();
+    }, []);
+
+    const statCards = [
+        {
+            label: 'Total Orders',
+            value: stats?.totalOrders || 0,
+            subValue: `${stats?.pendingOrders || 0} pending`,
+            icon: ShoppingBag,
+            color: 'bg-blue-500',
+        },
+        {
+            label: 'Active Products',
+            value: stats?.activeProducts || 0,
+            subValue: `of ${stats?.totalProducts || 0} total`,
+            icon: Package,
+            color: 'bg-green-500',
+        },
+        {
+            label: 'Low Stock Alerts',
+            value: stats?.lowStockProducts || 0,
+            subValue: 'items need restock',
+            icon: AlertTriangle,
+            color: 'bg-amber-500',
+        },
+        {
+            label: 'Monthly Revenue',
+            value: `₹${((stats?.monthlyRevenue || 0) / 1000).toFixed(1)}K`,
+            subValue: 'this month',
+            icon: IndianRupee,
+            color: 'bg-purple-500',
+        },
     ];
 
+    const getStatusColor = (status: string) => {
+        switch (status) {
+            case 'PENDING': return 'text-amber-600 bg-amber-50';
+            case 'CONFIRMED': return 'text-blue-600 bg-blue-50';
+            case 'PROCESSING': return 'text-purple-600 bg-purple-50';
+            case 'DELIVERED': return 'text-green-600 bg-green-50';
+            case 'CANCELLED': return 'text-red-600 bg-red-50';
+            default: return 'text-gray-600 bg-gray-50';
+        }
+    };
+
     return (
-        <div className="space-y-12 animate-in fade-in duration-700">
-            {/* Hero Section */}
-            <div className="flex flex-col gap-4">
-                <h2 className="text-4xl font-bold tracking-tighter uppercase">Command Center</h2>
-                <p className="text-sm text-muted-foreground uppercase tracking-[0.2em] font-medium max-w-2xl">
-                    Unified interface for LUMINA operations. Monitor inventory, manage fulfillment, and analyze system performance metrics in real-time.
+        <div className="space-y-8">
+            {/* Header */}
+            <div className="flex flex-col gap-2">
+                <h1 className="text-3xl font-bold text-green-800 dark:text-green-200">Dashboard</h1>
+                <p className="text-muted-foreground">
+                    Welcome to AgroOrder - Monitor your wholesale operations
                 </p>
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {stats.map((stat, i) => (
-                    <div key={i} className="group relative overflow-hidden border border-border/40 bg-muted/20 p-8 transition-all hover:border-primary/50">
-                        <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                            <stat.icon className="h-24 w-24 -mr-8 -mt-8" />
-                        </div>
-                        
-                        <div className="relative z-10 space-y-4">
-                            <div className="flex items-center justify-between">
-                                <span className="text-[10px] uppercase tracking-[0.3em] font-bold text-muted-foreground">{stat.label}</span>
-                                <stat.icon className="h-4 w-4 text-primary" />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {statCards.map((stat, i) => (
+                    <div 
+                        key={i} 
+                        className={cn(
+                            "bg-white dark:bg-gray-900 rounded-xl border p-6 transition-all hover:shadow-lg",
+                            isLoading && "animate-pulse"
+                        )}
+                    >
+                        <div className="flex items-center justify-between mb-4">
+                            <div className={cn("p-3 rounded-lg text-white", stat.color)}>
+                                <stat.icon className="h-5 w-5" />
                             </div>
-                            <div className="flex items-baseline gap-4">
-                                <span className="text-5xl font-bold tracking-tighter">{stat.value}</span>
-                                <span className={cn(
-                                    "text-[10px] font-bold tracking-widest px-2 py-0.5 border",
-                                    stat.trend.startsWith('+') ? "text-green-500 border-green-500/20 bg-green-500/5" : "text-red-500 border-red-500/20 bg-red-500/5"
-                                )}>
-                                    {stat.trend}
-                                </span>
-                            </div>
-                            <p className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground/60">{stat.subValue}</p>
+                            <TrendingUp className="h-4 w-4 text-green-500" />
                         </div>
-
-                        <div className="absolute bottom-0 left-0 w-full h-1 bg-primary/10 group-hover:bg-primary/30 transition-colors" />
+                        <div className="space-y-1">
+                            <p className="text-sm text-muted-foreground">{stat.label}</p>
+                            <p className="text-2xl font-bold">{isLoading ? '—' : stat.value}</p>
+                            <p className="text-xs text-muted-foreground">{stat.subValue}</p>
+                        </div>
                     </div>
                 ))}
             </div>
 
-            {/* Main Content Area */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-                {/* System Status */}
-                <div className="lg:col-span-2 space-y-8">
-                    <div className="flex items-center justify-between border-b border-border/10 pb-4">
-                        <h3 className="text-xl font-bold tracking-tighter uppercase">Operational Status</h3>
-                        <div className="flex items-center gap-2">
-                            <div className="h-2 w-2 rounded-full bg-green-500" />
-                            <span className="text-[10px] uppercase tracking-widest font-bold text-green-500">All Systems Nominal</span>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="border border-border/40 p-8 space-y-6 group hover:bg-muted/30 transition-all">
-                            <div className="flex items-center gap-4">
-                                <div className="w-10 h-10 border border-border/40 flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                                    <Package className="h-4 w-4" />
+            {/* Quick Actions & Recent Orders */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Quick Actions */}
+                <div className="space-y-6">
+                    <h2 className="text-xl font-semibold">Quick Actions</h2>
+                    
+                    <div className="space-y-4">
+                        <Link href="/admin/products/new" className="block">
+                            <div className="bg-white dark:bg-gray-900 rounded-xl border p-6 hover:border-green-500 transition-all group">
+                                <div className="flex items-center gap-4">
+                                    <div className="p-3 rounded-lg bg-green-100 dark:bg-green-900 text-green-600 group-hover:bg-green-600 group-hover:text-white transition-all">
+                                        <Package className="h-5 w-5" />
+                                    </div>
+                                    <div className="flex-1">
+                                        <h3 className="font-semibold">Add New Product</h3>
+                                        <p className="text-sm text-muted-foreground">List a new farm produce</p>
+                                    </div>
+                                    <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-green-600" />
                                 </div>
-                                <h4 className="font-bold tracking-tighter uppercase">Inventory Core</h4>
                             </div>
-                            <p className="text-xs text-muted-foreground leading-relaxed font-medium uppercase tracking-wider">
-                                Manage your global product database. Update SKUs, adjust pricing, and control visibility across segments.
-                            </p>
-                            <Link href="/admin/products">
-                                <Button variant="outline" className="w-full rounded-none h-12 uppercase tracking-[0.2em] text-[10px] font-bold hover:bg-primary hover:text-primary-foreground transition-all">
-                                    Access Catalog
-                                    <ArrowRight className="ml-2 h-3 w-3" />
-                                </Button>
-                            </Link>
-                        </div>
+                        </Link>
 
-                        <div className="border border-border/40 p-8 space-y-6 group hover:bg-muted/30 transition-all">
-                            <div className="flex items-center gap-4">
-                                <div className="w-10 h-10 border border-border/40 flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                                    <ShoppingBag className="h-4 w-4" />
+                        <Link href="/admin/orders" className="block">
+                            <div className="bg-white dark:bg-gray-900 rounded-xl border p-6 hover:border-green-500 transition-all group">
+                                <div className="flex items-center gap-4">
+                                    <div className="p-3 rounded-lg bg-blue-100 dark:bg-blue-900 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-all">
+                                        <ShoppingBag className="h-5 w-5" />
+                                    </div>
+                                    <div className="flex-1">
+                                        <h3 className="font-semibold">Manage Orders</h3>
+                                        <p className="text-sm text-muted-foreground">Process bulk orders</p>
+                                    </div>
+                                    <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-blue-600" />
                                 </div>
-                                <h4 className="font-bold tracking-tighter uppercase">Fulfillment Engine</h4>
                             </div>
-                            <p className="text-xs text-muted-foreground leading-relaxed font-medium uppercase tracking-wider">
-                                Process customer transactions, track logistics, and manage order lifecycles from initiation to delivery.
-                            </p>
-                            <Link href="/admin/orders">
-                                <Button variant="outline" className="w-full rounded-none h-12 uppercase tracking-[0.2em] text-[10px] font-bold hover:bg-primary hover:text-primary-foreground transition-all">
-                                    Review Orders
-                                    <ArrowRight className="ml-2 h-3 w-3" />
-                                </Button>
-                            </Link>
-                        </div>
+                        </Link>
+
+                        <Link href="/admin/products" className="block">
+                            <div className="bg-white dark:bg-gray-900 rounded-xl border p-6 hover:border-green-500 transition-all group">
+                                <div className="flex items-center gap-4">
+                                    <div className="p-3 rounded-lg bg-amber-100 dark:bg-amber-900 text-amber-600 group-hover:bg-amber-600 group-hover:text-white transition-all">
+                                        <AlertTriangle className="h-5 w-5" />
+                                    </div>
+                                    <div className="flex-1">
+                                        <h3 className="font-semibold">Check Inventory</h3>
+                                        <p className="text-sm text-muted-foreground">Monitor stock levels</p>
+                                    </div>
+                                    <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-amber-600" />
+                                </div>
+                            </div>
+                        </Link>
                     </div>
                 </div>
 
-                {/* Activity Feed */}
-                <div className="space-y-8">
-                    <div className="flex items-center justify-between border-b border-border/10 pb-4">
-                        <h3 className="text-xl font-bold tracking-tighter uppercase">System Logs</h3>
-                        <Link href="#" className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground hover:text-primary transition-colors">View All</Link>
+                {/* Recent Orders */}
+                <div className="lg:col-span-2 space-y-6">
+                    <div className="flex items-center justify-between">
+                        <h2 className="text-xl font-semibold">Recent Orders</h2>
+                        <Link href="/admin/orders" className="text-sm text-green-600 hover:underline">
+                            View all
+                        </Link>
                     </div>
 
-                    <div className="space-y-6">
-                        {[
-                            { event: 'New Order Received', time: '2m ago', id: '#ORD-9421', type: 'success' },
-                            { event: 'Inventory Low: Tech Segment', time: '14m ago', id: 'SKU-8829', type: 'warning' },
-                            { event: 'Database Sync Complete', time: '1h ago', id: 'SYS-SYNC', type: 'info' },
-                            { event: 'Admin Session Initiated', time: '2h ago', id: 'USR-ADMIN', type: 'info' },
-                        ].map((log, i) => (
-                            <div key={i} className="flex gap-4 group cursor-default">
-                                <div className={cn(
-                                    "w-1 mt-1 shrink-0 h-10",
-                                    log.type === 'success' ? "bg-green-500" : 
-                                    log.type === 'warning' ? "bg-yellow-500" : "bg-primary/20"
-                                )} />
-                                <div className="flex-1 space-y-1">
-                                    <div className="flex items-center justify-between">
-                                        <p className="text-[10px] font-bold uppercase tracking-widest group-hover:text-primary transition-colors">{log.event}</p>
-                                        <span className="text-[9px] text-muted-foreground font-bold">{log.time}</span>
-                                    </div>
-                                    <p className="text-[9px] text-muted-foreground uppercase tracking-widest font-bold">{log.id}</p>
-                                </div>
+                    <div className="bg-white dark:bg-gray-900 rounded-xl border overflow-hidden">
+                        {isLoading ? (
+                            <div className="p-8 text-center text-muted-foreground">
+                                Loading orders...
                             </div>
-                        ))}
+                        ) : stats?.recentOrders && stats.recentOrders.length > 0 ? (
+                            <div className="divide-y">
+                                {stats.recentOrders.slice(0, 5).map((order: Order) => (
+                                    <div key={order.id} className="p-4 hover:bg-muted/50 transition-colors">
+                                        <div className="flex items-center justify-between mb-2">
+                                            <div className="flex items-center gap-3">
+                                                <span className="font-mono text-sm font-semibold">
+                                                    {order.orderNumber}
+                                                </span>
+                                                <span className={cn(
+                                                    "px-2 py-1 rounded-full text-xs font-medium",
+                                                    getStatusColor(order.status)
+                                                )}>
+                                                    {order.status}
+                                                </span>
+                                            </div>
+                                            <span className="font-semibold">
+                                                ₹{order.totalAmount.toLocaleString()}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center justify-between text-sm text-muted-foreground">
+                                            <span>{order.buyerName} • {order.buyerCompany || 'Individual'}</span>
+                                            <span className="flex items-center gap-1">
+                                                <Clock className="h-3 w-3" />
+                                                {new Date(order.createdAt).toLocaleDateString()}
+                                            </span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="p-8 text-center text-muted-foreground">
+                                <ShoppingBag className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                                <p>No orders yet</p>
+                                <p className="text-sm">Orders will appear here when buyers place them</p>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

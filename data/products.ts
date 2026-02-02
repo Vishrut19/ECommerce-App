@@ -1,304 +1,254 @@
-import { Product, Currency, AttributeSet, Attribute } from '@/types';
+// AgroOrder - B2B Farm Produce Categories
+// This file provides fallback data for when database is unavailable
 
-// Currencies
-export const currencies: Currency[] = [
-  { label: 'USD', symbol: '$' },
-  { label: 'GBP', symbol: '£' },
-  { label: 'AUD', symbol: 'A$' },
-  { label: 'JPY', symbol: '¥' },
-  { label: 'RUB', symbol: '₽' },
+import { Category, Product, UnitType } from '@/types';
+
+// Categories for farm produce
+export const categories: Category[] = [
+  {
+    id: 'cat-grains',
+    name: 'grains-pulses',
+    displayName: 'Grains & Pulses',
+    icon: '🌾',
+    description: 'Quality grains and pulses for wholesale',
+    isOrganic: false,
+    sortOrder: 1,
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 'cat-vegetables',
+    name: 'vegetables',
+    displayName: 'Vegetables',
+    icon: '🥔',
+    description: 'Fresh farm vegetables',
+    isOrganic: false,
+    sortOrder: 2,
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 'cat-fruits',
+    name: 'fruits',
+    displayName: 'Fruits',
+    icon: '🍎',
+    description: 'Seasonal fresh fruits',
+    isOrganic: false,
+    sortOrder: 3,
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 'cat-spices',
+    name: 'spices',
+    displayName: 'Spices',
+    icon: '🌶',
+    description: 'Premium quality spices',
+    isOrganic: false,
+    sortOrder: 4,
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 'cat-dairy',
+    name: 'dairy',
+    displayName: 'Dairy',
+    icon: '🧀',
+    description: 'Fresh dairy products',
+    isOrganic: false,
+    sortOrder: 5,
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 'cat-organic',
+    name: 'organic',
+    displayName: 'Organic Produce',
+    icon: '🌱',
+    description: 'Certified organic products',
+    isOrganic: true,
+    sortOrder: 6,
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
 ];
 
-// Helper function to create prices for all currencies
-const createPrices = (usdPrice: number) => {
-  const rates = {
-    USD: 1,
-    GBP: 0.79,
-    AUD: 1.52,
-    JPY: 149.83,
-    RUB: 92.5,
-  };
-  
-  return currencies.map(currency => ({
-    currency,
-    amount: parseFloat((usdPrice * rates[currency.label as keyof typeof rates]).toFixed(2)),
-  }));
-};
-
-// Product data
+// Sample products (fallback data)
 export const products: Product[] = [
+  // Grains & Pulses
   {
-    id: 'huarache-x-stussy-le',
-    name: 'Nike Air Huarache Le',
-    brand: 'Nike x Stussy',
-    category: 'clothes',
-    description: '<p>Great sneakers for everyday use!</p>',
-    inStock: true,
-    prices: createPrices(120),
-    gallery: [
-      'https://cdn.shopify.com/s/files/1/0087/6193/3920/products/DD1381200_DEOA_2_720x.jpg?v=1612816087',
-      'https://cdn.shopify.com/s/files/1/0087/6193/3920/products/DD1381200_DEOA_1_720x.jpg?v=1612816087',
-      'https://cdn.shopify.com/s/files/1/0087/6193/3920/products/DD1381200_DEOA_3_720x.jpg?v=1612816087',
-      'https://cdn.shopify.com/s/files/1/0087/6193/3920/products/DD1381200_DEOA_5_720x.jpg?v=1612816087',
-      'https://cdn.shopify.com/s/files/1/0087/6193/3920/products/DD1381200_DEOA_4_720x.jpg?v=1612816087',
-    ],
-    attributes: [
-      {
-        id: 'size',
-        name: 'Size',
-        type: 'text',
-        items: [
-          { id: '40', displayValue: '40', value: '40' },
-          { id: '41', displayValue: '41', value: '41' },
-          { id: '42', displayValue: '42', value: '42' },
-          { id: '43', displayValue: '43', value: '43' },
-        ],
-      },
-    ],
+    id: 'prod-rice',
+    name: 'Premium Basmati Rice',
+    slug: 'rice',
+    description: 'Premium quality basmati rice for wholesale. Aged and aromatic.',
+    categoryId: 'cat-grains',
+    pricePerUnit: 45,
+    unitType: 'KG' as UnitType,
+    minOrderQty: 50,
+    stockQty: 5000,
+    images: ['/images/rice.jpg'],
+    supplierName: 'Punjab Grains Co.',
+    isOrganic: false,
+    isActive: true,
+    isFeatured: true,
+    lowStockAlert: 500,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   },
   {
-    id: 'jacket-canada-goosee',
-    name: 'Jacket',
-    brand: 'Canada Goose',
-    category: 'clothes',
-    description: '<p>Awesome winter jacket</p>',
-    inStock: true,
-    prices: createPrices(430),
-    gallery: [
-      'https://images.canadagoose.com/image/upload/w_480,c_scale,f_auto,q_auto:best/v1576016105/product-image/2409L_61.jpg',
-      'https://images.canadagoose.com/image/upload/w_480,c_scale,f_auto,q_auto:best/v1576016107/product-image/2409L_61_a.jpg',
-      'https://images.canadagoose.com/image/upload/w_480,c_scale,f_auto,q_auto:best/v1576016108/product-image/2409L_61_b.jpg',
-      'https://images.canadagoose.com/image/upload/w_480,c_scale,f_auto,q_auto:best/v1576016109/product-image/2409L_61_c.jpg',
-      'https://images.canadagoose.com/image/upload/w_480,c_scale,f_auto,q_auto:best/v1576016110/product-image/2409L_61_d.jpg',
-    ],
-    attributes: [
-      {
-        id: 'size',
-        name: 'Size',
-        type: 'text',
-        items: [
-          { id: 'small', displayValue: 'Small', value: 'S' },
-          { id: 'medium', displayValue: 'Medium', value: 'M' },
-          { id: 'large', displayValue: 'Large', value: 'L' },
-          { id: 'xl', displayValue: 'Extra Large', value: 'XL' },
-        ],
-      },
-    ],
+    id: 'prod-wheat',
+    name: 'Whole Wheat Grain',
+    slug: 'wheat',
+    description: 'High-quality whole wheat grain for commercial use.',
+    categoryId: 'cat-grains',
+    pricePerUnit: 35,
+    unitType: 'KG' as UnitType,
+    minOrderQty: 100,
+    stockQty: 8000,
+    images: ['/images/wheat.jpg'],
+    supplierName: 'MP Agro Traders',
+    isOrganic: false,
+    isActive: true,
+    isFeatured: false,
+    lowStockAlert: 1000,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  // Vegetables
+  {
+    id: 'prod-potato',
+    name: 'Fresh Potatoes',
+    slug: 'potato',
+    description: 'Farm-fresh potatoes, ideal for restaurants and retailers.',
+    categoryId: 'cat-vegetables',
+    pricePerUnit: 22,
+    unitType: 'KG' as UnitType,
+    minOrderQty: 100,
+    stockQty: 10000,
+    images: ['/images/potato.jpg'],
+    supplierName: 'UP Vegetable Farms',
+    isOrganic: false,
+    isActive: true,
+    isFeatured: true,
+    lowStockAlert: 1000,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   },
   {
-    id: 'ps-5',
-    name: 'PlayStation 5',
-    brand: 'Sony',
-    category: 'tech',
-    description: '<p>A good gaming console. Plays games of PS4! Enjoy if you can buy it mwahahahaha</p>',
-    inStock: false,
-    prices: createPrices(700),
-    gallery: [
-      'https://images-na.ssl-images-amazon.com/images/I/510VSJ9mWDL._SL1262_.jpg',
-      'https://images-na.ssl-images-amazon.com/images/I/610%2B69ZsKCL._SL1500_.jpg',
-      'https://images-na.ssl-images-amazon.com/images/I/51iPoFwQT3L._SL1230_.jpg',
-      'https://images-na.ssl-images-amazon.com/images/I/61qbqFcvoNL._SL1500_.jpg',
-      'https://images-na.ssl-images-amazon.com/images/I/51HCjA3rqYL._SL1230_.jpg',
-    ],
-    attributes: [
-      {
-        id: 'color',
-        name: 'Color',
-        type: 'swatch',
-        items: [
-          { id: 'green', displayValue: 'Green', value: '#44FF03' },
-          { id: 'cyan', displayValue: 'Cyan', value: '#03FFF7' },
-          { id: 'blue', displayValue: 'Blue', value: '#030BFF' },
-          { id: 'black', displayValue: 'Black', value: '#000000' },
-          { id: 'white', displayValue: 'White', value: '#FFFFFF' },
-        ],
-      },
-      {
-        id: 'capacity',
-        name: 'Capacity',
-        type: 'text',
-        items: [
-          { id: '512g', displayValue: '512G', value: '512G' },
-          { id: '1t', displayValue: '1T', value: '1T' },
-        ],
-      },
-    ],
+    id: 'prod-onion',
+    name: 'Red Onion',
+    slug: 'onion',
+    description: 'Quality red onions from Maharashtra farms.',
+    categoryId: 'cat-vegetables',
+    pricePerUnit: 35,
+    unitType: 'KG' as UnitType,
+    minOrderQty: 50,
+    stockQty: 8000,
+    images: ['/images/onion.jpg'],
+    supplierName: 'Maharashtra Onion Traders',
+    isOrganic: false,
+    isActive: true,
+    isFeatured: false,
+    lowStockAlert: 500,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   },
+  // Fruits
   {
-    id: 'xbox-series-s',
-    name: 'Xbox Series S 512GB',
-    brand: 'Microsoft',
-    category: 'tech',
-    description: `<div>
-    <ul>
-        <li><span>Hardware-beschleunigtes Raytracing macht dein Spiel noch realistischer</span></li>
-        <li><span>Spiele Games mit bis zu 120 Bilder pro Sekunde</span></li>
-        <li><span>Minimiere Ladezeiten mit einer speziell entwickelten 512GB NVMe SSD und wechsle mit Quick Resume nahtlos zwischen mehreren Spielen.</span></li>
-        <li><span>Xbox Smart Delivery stellt sicher, dass du die beste Version deines Spiels spielst, egal, auf welcher Konsole du spielst</span></li>
-        <li><span>Spiele deine Xbox One-Spiele auf deiner Xbox Series S weiter. Deine Fortschritte, Erfolge und Freundesliste werden automatisch auf das neue System übertragen.</span></li>
-        <li><span>Erwecke deine Spiele und Filme mit innovativem 3D Raumklang zum Leben</span></li>
-        <li><span>Der brandneue Xbox Wireless Controller zeichnet sich durch höchste Präzision, eine neue Share-Taste und verbesserte Ergonomie aus</span></li>
-        <li><span>Ultra-niedrige Latenz verbessert die Reaktionszeit von Controller zum Fernseher</span></li>
-        <li><span>Verwende dein Xbox One-Gaming-Zubehör -einschließlich Controller, Headsets und mehr</span></li>
-        <li><span>Erweitere deinen Speicher mit der Seagate 1 TB-Erweiterungskarte für Xbox Series X (separat erhältlich) und streame 4K-Videos von Disney+, Netflix, Amazon, Microsoft Movies &amp; TV und mehr</span></li>
-    </ul>
-</div>`,
-    inStock: false,
-    prices: createPrices(277),
-    gallery: [
-      'https://images-na.ssl-images-amazon.com/images/I/71vPCX0bS-L._SL1500_.jpg',
-      'https://images-na.ssl-images-amazon.com/images/I/71q7JTbRTpL._SL1500_.jpg',
-      'https://images-na.ssl-images-amazon.com/images/I/71iQ4HGHtsL._SL1500_.jpg',
-      'https://images-na.ssl-images-amazon.com/images/I/61IYrCrBzxL._SL1500_.jpg',
-      'https://images-na.ssl-images-amazon.com/images/I/61RnXmpAmIL._SL1500_.jpg',
-    ],
-    attributes: [
-      {
-        id: 'color',
-        name: 'Color',
-        type: 'swatch',
-        items: [
-          { id: 'green', displayValue: 'Green', value: '#44FF03' },
-          { id: 'cyan', displayValue: 'Cyan', value: '#03FFF7' },
-          { id: 'blue', displayValue: 'Blue', value: '#030BFF' },
-          { id: 'black', displayValue: 'Black', value: '#000000' },
-          { id: 'white', displayValue: 'White', value: '#FFFFFF' },
-        ],
-      },
-      {
-        id: 'capacity',
-        name: 'Capacity',
-        type: 'text',
-        items: [
-          { id: '512g', displayValue: '512G', value: '512G' },
-          { id: '1t', displayValue: '1T', value: '1T' },
-        ],
-      },
-    ],
+    id: 'prod-apple',
+    name: 'Kashmir Apples',
+    slug: 'apple',
+    description: 'Premium Kashmir apples, fresh from the orchards.',
+    categoryId: 'cat-fruits',
+    pricePerUnit: 150,
+    unitType: 'KG' as UnitType,
+    minOrderQty: 20,
+    stockQty: 2000,
+    images: ['/images/apple.jpg'],
+    supplierName: 'Kashmir Apple Orchards',
+    isOrganic: false,
+    isActive: true,
+    isFeatured: true,
+    lowStockAlert: 200,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   },
+  // Spices
   {
-    id: 'apple-imac-2021',
-    name: 'iMac 2021',
-    brand: 'Apple',
-    category: 'tech',
-    description: 'The new iMac!',
-    inStock: true,
-    prices: createPrices(1400),
-    gallery: [
-      'https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/imac-24-blue-selection-hero-202104?wid=904&hei=840&fmt=jpeg&qlt=80&.v=1617492405000',
-    ],
-    attributes: [
-      {
-        id: 'capacity',
-        name: 'Capacity',
-        type: 'text',
-        items: [
-          { id: '256gb', displayValue: '256GB', value: '256GB' },
-          { id: '512gb', displayValue: '512GB', value: '512GB' },
-        ],
-      },
-      {
-        id: 'usb3',
-        name: 'With USB 3 ports',
-        type: 'text',
-        items: [
-          { id: 'yes', displayValue: 'Yes', value: 'Yes' },
-          { id: 'no', displayValue: 'No', value: 'No' },
-        ],
-      },
-      {
-        id: 'touchid',
-        name: 'Touch ID in keyboard',
-        type: 'text',
-        items: [
-          { id: 'yes', displayValue: 'Yes', value: 'Yes' },
-          { id: 'no', displayValue: 'No', value: 'No' },
-        ],
-      },
-    ],
+    id: 'prod-turmeric',
+    name: 'Turmeric Powder',
+    slug: 'turmeric',
+    description: 'Pure turmeric powder from Erode, high curcumin content.',
+    categoryId: 'cat-spices',
+    pricePerUnit: 180,
+    unitType: 'KG' as UnitType,
+    minOrderQty: 10,
+    stockQty: 500,
+    images: ['/images/turmeric.jpg'],
+    supplierName: 'Erode Spice Co.',
+    isOrganic: false,
+    isActive: true,
+    isFeatured: true,
+    lowStockAlert: 50,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   },
+  // Dairy
   {
-    id: 'apple-iphone-12-pro',
-    name: 'iPhone 12 Pro',
-    brand: 'Apple',
-    category: 'tech',
-    description: 'This is iPhone 12. Nothing else to say.',
-    inStock: true,
-    prices: createPrices(830),
-    gallery: [
-      'https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/iphone-12-pro-family-hero?wid=940&amp;hei=1112&amp;fmt=jpeg&amp;qlt=80&amp;.v=1604021663000',
-    ],
-    attributes: [
-      {
-        id: 'capacity',
-        name: 'Capacity',
-        type: 'text',
-        items: [
-          { id: '512g', displayValue: '512G', value: '512G' },
-          { id: '1t', displayValue: '1T', value: '1T' },
-        ],
-      },
-      {
-        id: 'color',
-        name: 'Color',
-        type: 'swatch',
-        items: [
-          { id: 'green', displayValue: 'Green', value: '#44FF03' },
-          { id: 'cyan', displayValue: 'Cyan', value: '#03FFF7' },
-          { id: 'blue', displayValue: 'Blue', value: '#030BFF' },
-          { id: 'black', displayValue: 'Black', value: '#000000' },
-          { id: 'white', displayValue: 'White', value: '#FFFFFF' },
-        ],
-      },
-    ],
+    id: 'prod-milk',
+    name: 'Fresh Milk',
+    slug: 'milk',
+    description: 'Fresh pasteurized milk for bulk orders.',
+    categoryId: 'cat-dairy',
+    pricePerUnit: 55,
+    unitType: 'LITER' as UnitType,
+    minOrderQty: 50,
+    stockQty: 2000,
+    images: ['/images/milk.jpg'],
+    supplierName: 'Amul Dairy',
+    isOrganic: false,
+    isActive: true,
+    isFeatured: true,
+    lowStockAlert: 200,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   },
+  // Organic
   {
-    id: 'apple-airpods-pro',
-    name: 'AirPods Pro',
-    brand: 'Apple',
-    category: 'tech',
-    description: `<h3>Magic like you've never heard</h3>
-<p>AirPods Pro have been designed to deliver Active Noise Cancellation for immersive sound, Transparency mode so you can hear your surroundings, and a customizable fit for all-day comfort. Just like AirPods, AirPods Pro connect magically to your iPhone or Apple Watch. And they're ready to use right out of the case.
-
-<h3>Active Noise Cancellation</h3>
-<p>Incredibly light noise-cancelling headphones, AirPods Pro block out your environment so you can focus on what you're listening to. AirPods Pro use two microphones, an outward-facing microphone and an inward-facing microphone, to create superior noise cancellation. By continuously adapting to the geometry of your ear and the fit of the ear tips, Active Noise Cancellation silences the world to keep you fully tuned in to your music, podcasts, and calls.
-
-<h3>Transparency mode</h3>
-<p>Switch to Transparency mode and AirPods Pro let the outside sound in, allowing you to hear and connect to your surroundings. Outward- and inward-facing microphones enable AirPods Pro to undo the sound-isolating effect of the silicone tips so things sound and feel natural, like when you're talking to people around you.</p>
-
-<h3>All-new design</h3>
-<p>AirPods Pro offer a more customizable fit with three sizes of flexible silicone tips to choose from. With an internal taper, they conform to the shape of your ear, securing your AirPods Pro in place and creating an exceptional seal for superior noise cancellation.</p>
-
-<h3>Amazing audio quality</h3>
-<p>A custom-built high-excursion, low-distortion driver delivers powerful bass. A superefficient high dynamic range amplifier produces pure, incredibly clear sound while also extending battery life. And Adaptive EQ automatically tunes music to suit the shape of your ear for a rich, consistent listening experience.</p>
-
-<h3>Even more magical</h3>
-<p>The Apple-designed H1 chip delivers incredibly low audio latency. A force sensor on the stem makes it easy to control music and calls and switch between Active Noise Cancellation and Transparency mode. Announce Messages with Siri gives you the option to have Siri read your messages through your AirPods. And with Audio Sharing, you and a friend can share the same audio stream on two sets of AirPods — so you can play a game, watch a movie, or listen to a song together.</p>`,
-    inStock: false,
-    prices: createPrices(249),
-    gallery: [
-      'https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/MWP22?wid=572&hei=572&fmt=jpeg&qlt=95&.v=1591634795000',
-    ],
-    attributes: [],
-  },
-  {
-    id: 'apple-airtag',
-    name: 'AirTag',
-    brand: 'Apple',
-    category: 'tech',
-    description: `<h1>Lose your knack for losing things.</h1>
-<p>AirTag is an easy way to keep track of your stuff. Attach one to your keys, slip another one in your backpack. And just like that, they're on your radar in the Find My app. AirTag has your back.</p>`,
-    inStock: true,
-    prices: createPrices(100),
-    gallery: [
-      'https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/airtag-double-select-202104?wid=445&hei=370&fmt=jpeg&qlt=95&.v=1617761672000',
-    ],
-    attributes: [],
+    id: 'prod-organic-rice',
+    name: 'Organic Brown Rice',
+    slug: 'organic-rice',
+    description: 'Certified organic brown rice, chemical-free farming.',
+    categoryId: 'cat-organic',
+    pricePerUnit: 95,
+    unitType: 'KG' as UnitType,
+    minOrderQty: 25,
+    stockQty: 1000,
+    images: ['/images/organic-rice.jpg'],
+    supplierName: 'Organic India Farms',
+    isOrganic: true,
+    isActive: true,
+    isFeatured: true,
+    lowStockAlert: 100,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   },
 ];
 
-// Categories
-export const categories = [
-  { name: 'tech', title: 'Tech' },
-  { name: 'clothes', title: 'Clothes' },
-];
+// Helper to get products by category
+export function getProductsByCategory(categorySlug: string): Product[] {
+  const category = categories.find((c) => c.name === categorySlug);
+  if (!category) return [];
+  return products.filter((p) => p.categoryId === category.id);
+}
+
+// Helper to get featured products
+export function getFeaturedProducts(): Product[] {
+  return products.filter((p) => p.isFeatured && p.isActive);
+}

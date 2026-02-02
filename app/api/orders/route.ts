@@ -1,131 +1,247 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { ApiResponse, Order, PaginatedResponse } from '@/types';
 import { z } from 'zod';
 
-// Schema for creating an order
-const createOrderSchema = z.object({
-  items: z.array(z.object({
-    productId: z.string(),
-    productName: z.string(),
-    quantity: z.number().int().positive(),
-    price: z.number().positive(),
-    attributes: z.record(z.string(), z.string()).optional(),
-  })).min(1, 'Order must contain at least one item'),
-  currency: z.string().default('USD'),
+const orderItemSchema = z.object({
+  productId: z.string(),
+  quantity: z.number().min(1),
+  unitType: z.string(),
+  pricePerUnit: z.number(),
 });
 
-// Schema for updating order status
-const updateOrderStatusSchema = z.object({
-  status: z.enum(['pending', 'processing', 'completed', 'cancelled']),
+const orderSchema = z.object({
+  buyerName: z.string().min(1, 'Name is required'),
+  buyerEmail: z.string().email('Valid email is required'),
+  buyerPhone: z.string().min(1, 'Phone is required'),
+  buyerCompany: z.string().optional(),
+  buyerAddress: z.string().optional(),
+  notes: z.string().optional(),
+  items: z.array(orderItemSchema).min(1, 'At least one item is required'),
 });
 
-// GET /api/orders - List all orders (admin)
-export async function GET() {
-  try {
-    const orders = await prisma.order.findMany({
-      include: {
-        items: true,
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
-
-    return NextResponse.json(orders);
-  } catch (error) {
-    console.error('Error fetching orders:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch orders' },
-      { status: 500 }
-    );
-  }
+function generateOrderNumber() {
+  const date = new Date();
+  const year = date.getFullYear().toString().slice(-2);
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const day = date.getDate().toString().padStart(2, '0');
+  const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+  return `AGO-${year}${month}${day}-${random}`;
 }
 
-// POST /api/orders - Create a new order
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const validatedData = createOrderSchema.parse(body);
+    const validatedData = orderSchema.parse(body);
 
-    // Calculate total
-    const total = validatedData.items.reduce(
-      (sum, item) => sum + item.price * item.quantity,
-      0
-    );
+    // Calculate totals and validate products
+    let totalAmount = 0;
+    const orderItems: Array<{
+      product: { connect: { id: string } };
+      productName: string;
+      quantity: number;
+      unitType: any;
+      pricePerUnit: number;
+      subtotal: number;
+    }> = [];
 
-    // Create order with items
-    const order = await prisma.order.create({
-      data: {
-        total,
-        currency: validatedData.currency,
-        status: 'pending',
-        items: {
-          create: validatedData.items.map((item) => ({
-            productId: item.productId,
-            productName: item.productName,
-            quantity: item.quantity,
-            price: item.price,
-            attributes: item.attributes || {},
-          })),
+    for (const item of validatedData.items) {
+      const product = await prisma.product.findUnique({
+        where: { id: item.productId },
+      });
+
+      if (!product) {
+        return NextResponse.json(
+          { success: false, error: { message: `Product not found: ${item.productId}`, code: 'PRODUCT_NOT_FOUND' } },
+          { status: 400 }
+        );
+      }
+
+      if (!product.isActive) {
+        return NextResponse.json(
+          { success: false, error: { message: `Product ${product.name} is no longer available`, code: 'PRODUCT_INACTIVE' } },
+          { status: 400 }
+        );
+      }
+
+      if (item.quantity < product.minOrderQty) {
+        return NextResponse.json(
+          { success: false, error: { message: `Minimum order quantity for ${product.name} is ${product.minOrderQty}`, code: 'MIN_QTY_NOT_MET' } },
+          { status: 400 }
+        );
+      }
+
+      if (item.quantity > product.stockQty) {
+        return NextResponse.json(
+          { success: false, error: { message: `Insufficient stock for ${product.name}. Available: ${product.stockQty}`, code: 'INSUFFICIENT_STOCK' } },
+          { status: 400 }
+        );
+      }
+
+      const subtotal = item.quantity * item.pricePerUnit;
+      totalAmount += subtotal;
+
+      orderItems.push({
+        product: { connect: { id: product.id } },
+        productName: product.name,
+        quantity: item.quantity,
+        unitType: product.unitType,
+        pricePerUnit: item.pricePerUnit,
+        subtotal,
+      });
+    }
+
+    // Create order and update stock in a transaction
+    const order = await prisma.$transaction(async (tx) => {
+      // Create the order
+      const newOrder = await tx.order.create({
+        data: {
+          orderNumber: generateOrderNumber(),
+          buyerName: validatedData.buyerName,
+          buyerEmail: validatedData.buyerEmail,
+          buyerPhone: validatedData.buyerPhone,
+          buyerCompany: validatedData.buyerCompany || null,
+          buyerAddress: validatedData.buyerAddress || null,
+          notes: validatedData.notes || null,
+          totalAmount,
+          status: 'PENDING',
+          items: {
+            create: orderItems as any,
+          },
         },
-      },
-      include: {
-        items: true,
-      },
+        include: {
+          items: true,
+        },
+      });
+
+      // Update stock quantities (reserve stock)
+      for (const item of orderItems) {
+        await tx.product.update({
+          where: { id: item.product.connect.id },
+          data: {
+            stockQty: {
+              decrement: item.quantity,
+            },
+          },
+        });
+      }
+
+      return newOrder;
     });
 
-    return NextResponse.json(order, { status: 201 });
+    const response: ApiResponse<{ orderNumber: string; orderId: string }> = {
+      success: true,
+      data: {
+        orderNumber: order.orderNumber,
+        orderId: order.id,
+      },
+    };
+
+    return NextResponse.json(response, { status: 201 });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Invalid request data', details: error.issues },
+        { success: false, error: { message: error.issues?.[0]?.message || 'Validation error', code: 'VALIDATION_ERROR' } },
         { status: 400 }
       );
     }
-    console.error('Error creating order:', error);
+    console.error('Order creation error:', error);
     return NextResponse.json(
-      { error: 'Failed to create order' },
+      { success: false, error: { message: 'Failed to create order', code: 'INTERNAL_ERROR' } },
       { status: 500 }
     );
   }
 }
 
-// PUT /api/orders - Update order status (with order ID in body)
-export async function PUT(request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { id, ...data } = body;
+    const { searchParams } = new URL(request.url);
     
-    if (!id) {
-      return NextResponse.json(
-        { error: 'Order ID is required' },
-        { status: 400 }
-      );
+    // Filters
+    const status = searchParams.get('status');
+    const buyerEmail = searchParams.get('buyerEmail');
+    const search = searchParams.get('search');
+    const startDate = searchParams.get('startDate');
+    const endDate = searchParams.get('endDate');
+    
+    // Pagination
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '20');
+    const skip = (page - 1) * limit;
+
+    // Build where clause
+    const where: any = {};
+    
+    if (status) {
+      where.status = status;
+    }
+    
+    if (buyerEmail) {
+      where.buyerEmail = buyerEmail;
+    }
+    
+    if (search) {
+      where.OR = [
+        { orderNumber: { contains: search, mode: 'insensitive' } },
+        { buyerName: { contains: search, mode: 'insensitive' } },
+        { buyerEmail: { contains: search, mode: 'insensitive' } },
+        { buyerCompany: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+    
+    if (startDate || endDate) {
+      where.createdAt = {};
+      if (startDate) {
+        where.createdAt.gte = new Date(startDate);
+      }
+      if (endDate) {
+        where.createdAt.lte = new Date(endDate);
+      }
     }
 
-    const validatedData = updateOrderStatusSchema.parse(data);
+    // Execute queries
+    const [orders, total] = await Promise.all([
+      prisma.order.findMany({
+        where,
+        include: {
+          items: {
+            include: {
+              product: {
+                select: {
+                  id: true,
+                  name: true,
+                  slug: true,
+                  images: true,
+                },
+              },
+            },
+          },
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+        skip,
+        take: limit,
+      }),
+      prisma.order.count({ where }),
+    ]);
 
-    const order = await prisma.order.update({
-      where: { id },
-      data: {
-        status: validatedData.status,
+    const response: PaginatedResponse<Order> = {
+      success: true,
+      data: orders as unknown as Order[],
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
       },
-      include: {
-        items: true,
-      },
-    });
+    };
 
-    return NextResponse.json(order);
+    return NextResponse.json(response);
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Invalid request data', details: error.issues },
-        { status: 400 }
-      );
-    }
-    console.error('Error updating order:', error);
+    console.error('Get orders error:', error);
     return NextResponse.json(
-      { error: 'Failed to update order' },
+      { success: false, error: { message: 'Failed to fetch orders', code: 'INTERNAL_ERROR' } },
       { status: 500 }
     );
   }

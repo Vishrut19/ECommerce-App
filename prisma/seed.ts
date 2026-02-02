@@ -1,238 +1,195 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, UnitType } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
 import bcrypt from 'bcryptjs';
+import 'dotenv/config';
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
-  console.log('🌱 Starting database seed...');
+  console.log('🌱 Seeding AgroOrder database...');
 
-  // Create currencies
-  console.log('📊 Creating currencies...');
-  const currencies = await Promise.all([
-    prisma.currency.upsert({
-      where: { code: 'USD' },
-      update: {},
-      create: { code: 'USD', symbol: '$' },
-    }),
-    prisma.currency.upsert({
-      where: { code: 'GBP' },
-      update: {},
-      create: { code: 'GBP', symbol: '£' },
-    }),
-    prisma.currency.upsert({
-      where: { code: 'AUD' },
-      update: {},
-      create: { code: 'AUD', symbol: 'A$' },
-    }),
-    prisma.currency.upsert({
-      where: { code: 'JPY' },
-      update: {},
-      create: { code: 'JPY', symbol: '¥' },
-    }),
-    prisma.currency.upsert({
-      where: { code: 'RUB' },
-      update: {},
-      create: { code: 'RUB', symbol: '₽' },
-    }),
-  ]);
-  console.log(`✅ Created ${currencies.length} currencies`);
+  // Clear existing data in correct order (respecting foreign keys)
+  console.log('🗑️ Clearing existing data...');
+  await prisma.$executeRaw`TRUNCATE TABLE order_items, orders, products, categories, settings, users CASCADE`;
+
+  // Create default settings
+  console.log('⚙️ Creating settings...');
+  await prisma.settings.create({
+    data: {
+      id: 'default',
+      companyName: 'AgroOrder',
+      companyEmail: 'orders@agroorder.com',
+      companyPhone: '+91 98765 43210',
+      whatsappNumber: '+91 98765 43210',
+      companyAddress: 'Agricultural Market Yard, Mumbai, India',
+      orderNotificationEmail: 'admin@agroorder.com',
+      currency: 'INR',
+      currencySymbol: '₹',
+    },
+  });
 
   // Create categories
   console.log('📁 Creating categories...');
-  const techCategory = await prisma.category.upsert({
-    where: { name: 'tech' },
-    update: {},
-    create: { name: 'tech', title: 'Tech' },
+  const grainsPulses = await prisma.category.create({
+    data: {
+      name: 'grains-pulses',
+      displayName: 'Grains & Pulses',
+      icon: '🌾',
+      description: 'Quality grains and pulses for wholesale',
+      sortOrder: 1,
+    },
   });
 
-  const clothesCategory = await prisma.category.upsert({
-    where: { name: 'clothes' },
-    update: {},
-    create: { name: 'clothes', title: 'Clothes' },
+  const vegetables = await prisma.category.create({
+    data: {
+      name: 'vegetables',
+      displayName: 'Vegetables',
+      icon: '🥔',
+      description: 'Fresh farm vegetables',
+      sortOrder: 2,
+    },
   });
-  console.log('✅ Created 2 categories');
+
+  const fruits = await prisma.category.create({
+    data: {
+      name: 'fruits',
+      displayName: 'Fruits',
+      icon: '🍎',
+      description: 'Seasonal fresh fruits',
+      sortOrder: 3,
+    },
+  });
+
+  const spices = await prisma.category.create({
+    data: {
+      name: 'spices',
+      displayName: 'Spices',
+      icon: '🌶',
+      description: 'Premium quality spices',
+      sortOrder: 4,
+    },
+  });
+
+  const dairy = await prisma.category.create({
+    data: {
+      name: 'dairy',
+      displayName: 'Dairy',
+      icon: '🧀',
+      description: 'Fresh dairy products',
+      sortOrder: 5,
+    },
+  });
+
+  const organic = await prisma.category.create({
+    data: {
+      name: 'organic',
+      displayName: 'Organic Produce',
+      icon: '🌱',
+      description: 'Certified organic products',
+      isOrganic: true,
+      sortOrder: 6,
+    },
+  });
+
+  // Create products
+  console.log('📦 Creating products...');
+  const productsData = [
+    // Grains & Pulses
+    { name: 'Rice', slug: 'rice', categoryId: grainsPulses.id, pricePerUnit: 45, unitType: UnitType.KG, minOrderQty: 50, stockQty: 5000, supplierName: 'Punjab Grains Co.', isFeatured: true },
+    { name: 'Wheat', slug: 'wheat', categoryId: grainsPulses.id, pricePerUnit: 35, unitType: UnitType.KG, minOrderQty: 100, stockQty: 8000, supplierName: 'MP Agro Traders' },
+    { name: 'Maize', slug: 'maize', categoryId: grainsPulses.id, pricePerUnit: 28, unitType: UnitType.KG, minOrderQty: 50, stockQty: 3000, supplierName: 'Karnataka Crops' },
+    { name: 'Barley', slug: 'barley', categoryId: grainsPulses.id, pricePerUnit: 42, unitType: UnitType.KG, minOrderQty: 25, stockQty: 2000, supplierName: 'Rajasthan Grains' },
+    { name: 'Lentils', slug: 'lentils', categoryId: grainsPulses.id, pricePerUnit: 95, unitType: UnitType.KG, minOrderQty: 20, stockQty: 1500, supplierName: 'MP Agro Traders' },
+    { name: 'Chickpeas', slug: 'chickpeas', categoryId: grainsPulses.id, pricePerUnit: 85, unitType: UnitType.KG, minOrderQty: 25, stockQty: 2500, supplierName: 'Rajasthan Grains' },
+
+    // Vegetables
+    { name: 'Potato', slug: 'potato', categoryId: vegetables.id, pricePerUnit: 22, unitType: UnitType.KG, minOrderQty: 100, stockQty: 10000, supplierName: 'UP Vegetable Farms', isFeatured: true },
+    { name: 'Onion', slug: 'onion', categoryId: vegetables.id, pricePerUnit: 35, unitType: UnitType.KG, minOrderQty: 50, stockQty: 8000, supplierName: 'Maharashtra Onion Traders' },
+    { name: 'Tomato', slug: 'tomato', categoryId: vegetables.id, pricePerUnit: 40, unitType: UnitType.KG, minOrderQty: 25, stockQty: 3000, supplierName: 'Karnataka Vegetables' },
+    { name: 'Cabbage', slug: 'cabbage', categoryId: vegetables.id, pricePerUnit: 18, unitType: UnitType.KG, minOrderQty: 50, stockQty: 2000, supplierName: 'Himachal Farms' },
+    { name: 'Carrot', slug: 'carrot', categoryId: vegetables.id, pricePerUnit: 45, unitType: UnitType.KG, minOrderQty: 25, stockQty: 1500, supplierName: 'Delhi NCR Vegetables' },
+    { name: 'Green Chili', slug: 'green-chili', categoryId: vegetables.id, pricePerUnit: 80, unitType: UnitType.KG, minOrderQty: 10, stockQty: 500, supplierName: 'Andhra Spice Farms' },
+
+    // Fruits
+    { name: 'Apple', slug: 'apple', categoryId: fruits.id, pricePerUnit: 150, unitType: UnitType.KG, minOrderQty: 20, stockQty: 2000, supplierName: 'Kashmir Apple Orchards', isFeatured: true },
+    { name: 'Banana', slug: 'banana', categoryId: fruits.id, pricePerUnit: 45, unitType: UnitType.DOZEN, minOrderQty: 50, stockQty: 5000, supplierName: 'Tamil Nadu Fruits' },
+    { name: 'Orange', slug: 'orange', categoryId: fruits.id, pricePerUnit: 80, unitType: UnitType.KG, minOrderQty: 25, stockQty: 3000, supplierName: 'Nagpur Orange Farms' },
+    { name: 'Mango', slug: 'mango', categoryId: fruits.id, pricePerUnit: 120, unitType: UnitType.KG, minOrderQty: 20, stockQty: 1500, supplierName: 'Ratnagiri Mango Farms' },
+    { name: 'Grapes', slug: 'grapes', categoryId: fruits.id, pricePerUnit: 95, unitType: UnitType.KG, minOrderQty: 15, stockQty: 1000, supplierName: 'Nashik Vineyards' },
+
+    // Spices
+    { name: 'Turmeric', slug: 'turmeric', categoryId: spices.id, pricePerUnit: 180, unitType: UnitType.KG, minOrderQty: 10, stockQty: 500, supplierName: 'Erode Spice Co.', isFeatured: true },
+    { name: 'Red Chili', slug: 'red-chili', categoryId: spices.id, pricePerUnit: 250, unitType: UnitType.KG, minOrderQty: 5, stockQty: 300, supplierName: 'Guntur Chili Traders' },
+    { name: 'Cumin', slug: 'cumin', categoryId: spices.id, pricePerUnit: 350, unitType: UnitType.KG, minOrderQty: 5, stockQty: 200, supplierName: 'Gujarat Spices' },
+    { name: 'Coriander', slug: 'coriander', categoryId: spices.id, pricePerUnit: 120, unitType: UnitType.KG, minOrderQty: 10, stockQty: 400, supplierName: 'Rajasthan Spices' },
+    { name: 'Black Pepper', slug: 'black-pepper', categoryId: spices.id, pricePerUnit: 650, unitType: UnitType.KG, minOrderQty: 2, stockQty: 100, supplierName: 'Kerala Spice Gardens' },
+
+    // Dairy
+    { name: 'Milk', slug: 'milk', categoryId: dairy.id, pricePerUnit: 55, unitType: UnitType.LITER, minOrderQty: 50, stockQty: 2000, supplierName: 'Amul Dairy', isFeatured: true },
+    { name: 'Butter', slug: 'butter', categoryId: dairy.id, pricePerUnit: 550, unitType: UnitType.KG, minOrderQty: 5, stockQty: 200, supplierName: 'Amul Dairy' },
+    { name: 'Cheese', slug: 'cheese', categoryId: dairy.id, pricePerUnit: 450, unitType: UnitType.KG, minOrderQty: 5, stockQty: 150, supplierName: 'Britannia Industries' },
+    { name: 'Ghee', slug: 'ghee', categoryId: dairy.id, pricePerUnit: 600, unitType: UnitType.KG, minOrderQty: 5, stockQty: 300, supplierName: 'Patanjali Foods' },
+    { name: 'Yogurt', slug: 'yogurt', categoryId: dairy.id, pricePerUnit: 80, unitType: UnitType.KG, minOrderQty: 20, stockQty: 500, supplierName: 'Nestle India' },
+
+    // Organic
+    { name: 'Organic Rice', slug: 'organic-rice', categoryId: organic.id, pricePerUnit: 95, unitType: UnitType.KG, minOrderQty: 25, stockQty: 1000, isOrganic: true, supplierName: 'Organic India Farms', isFeatured: true },
+    { name: 'Organic Vegetables Mix', slug: 'organic-vegetables', categoryId: organic.id, pricePerUnit: 120, unitType: UnitType.KG, minOrderQty: 10, stockQty: 500, isOrganic: true, supplierName: 'Green Valley Organics' },
+    { name: 'Organic Fruits Mix', slug: 'organic-fruits', categoryId: organic.id, pricePerUnit: 200, unitType: UnitType.KG, minOrderQty: 10, stockQty: 300, isOrganic: true, supplierName: 'Nature Fresh Organics' },
+  ];
+
+  for (const product of productsData) {
+    await prisma.product.create({
+      data: {
+        name: product.name,
+        slug: product.slug,
+        categoryId: product.categoryId,
+        pricePerUnit: product.pricePerUnit,
+        unitType: product.unitType,
+        minOrderQty: product.minOrderQty,
+        stockQty: product.stockQty,
+        supplierName: product.supplierName,
+        isOrganic: product.isOrganic || false,
+        isFeatured: product.isFeatured || false,
+        description: `Premium quality ${product.name.toLowerCase()} available for wholesale orders. Minimum order: ${product.minOrderQty} ${product.unitType.toLowerCase()}.`,
+        images: [],
+      },
+    });
+  }
 
   // Create admin user
   console.log('👤 Creating admin user...');
   const hashedPassword = await bcrypt.hash('admin123', 10);
-  const adminUser = await prisma.user.upsert({
-    where: { email: 'admin@example.com' },
-    update: {},
-    create: {
-      email: 'admin@example.com',
+  
+  await prisma.user.create({
+    data: {
+      email: 'admin@agroorder.com',
       name: 'Admin User',
       password: hashedPassword,
       role: 'admin',
       emailVerified: true,
     },
   });
-  console.log('✅ Created admin user');
 
-  // Helper function to create prices (for nested creation)
-  const createPricesNested = (usdPrice: number) => {
-    const rates = { USD: 1, GBP: 0.79, AUD: 1.52, JPY: 149.83, RUB: 92.5 };
-    return Object.entries(rates).map(([code, rate]) => ({
-      currencyCode: code,
-      amount: parseFloat((usdPrice * rate).toFixed(2)),
-    }));
-  };
-
-  // Helper function to create prices (for separate creation with productId)
-  const createPrices = (productId: string, usdPrice: number) => {
-    const rates = { USD: 1, GBP: 0.79, AUD: 1.52, JPY: 149.83, RUB: 92.5 };
-    return Object.entries(rates).map(([code, rate]) => ({
-      productId,
-      currencyCode: code,
-      amount: parseFloat((usdPrice * rate).toFixed(2)),
-    }));
-  };
-
-  // Create sample products
-  console.log('📦 Creating products...');
-  
-  // Tech Products
-  const iphone = await prisma.product.create({
-    data: {
-      name: 'iPhone 12 Pro',
-      brand: 'Apple',
-      categoryId: techCategory.id,
-      description: 'This is iPhone 12. Nothing else to say.',
-      inStock: true,
-      gallery: [
-        'https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/iphone-12-pro-family-hero?wid=940&hei=1112&fmt=jpeg&qlt=80&.v=1604021663000',
-      ],
-      prices: {
-        create: createPricesNested(830),
-      },
-      attributes: {
-        create: [
-          {
-            name: 'Capacity',
-            type: 'text',
-            items: {
-              create: [
-                { displayValue: '512G', value: '512G' },
-                { displayValue: '1T', value: '1T' },
-              ],
-            },
-          },
-          {
-            name: 'Color',
-            type: 'swatch',
-            items: {
-              create: [
-                { displayValue: 'Green', value: '#44FF03' },
-                { displayValue: 'Cyan', value: '#03FFF7' },
-                { displayValue: 'Blue', value: '#030BFF' },
-                { displayValue: 'Black', value: '#000000' },
-                { displayValue: 'White', value: '#FFFFFF' },
-              ],
-            },
-          },
-        ],
-      },
-    },
-  });
-
-  const ps5 = await prisma.product.create({
-    data: {
-      name: 'PlayStation 5',
-      brand: 'Sony',
-      categoryId: techCategory.id,
-      description: '<p>A good gaming console. Plays games of PS4! Enjoy if you can buy it mwahahahaha</p>',
-      inStock: false,
-      gallery: [
-        'https://images-na.ssl-images-amazon.com/images/I/510VSJ9mWDL._SL1262_.jpg',
-        'https://images-na.ssl-images-amazon.com/images/I/610%2B69ZsKCL._SL1500_.jpg',
-      ],
-      prices: {
-        create: createPricesNested(700),
-      },
-    },
-  });
-
-  // Clothes Products
-  const huarache = await prisma.product.create({
-    data: {
-      name: 'Nike Air Huarache Le',
-      brand: 'Nike x Stussy',
-      categoryId: clothesCategory.id,
-      description: '<p>Great sneakers for everyday use!</p>',
-      inStock: true,
-      gallery: [
-        'https://cdn.shopify.com/s/files/1/0087/6193/3920/products/DD1381200_DEOA_2_720x.jpg?v=1612816087',
-      ],
-      prices: {
-        create: createPricesNested(120),
-      },
-      attributes: {
-        create: [
-          {
-            name: 'Size',
-            type: 'text',
-            items: {
-              create: [
-                { displayValue: '40', value: '40' },
-                { displayValue: '41', value: '41' },
-                { displayValue: '42', value: '42' },
-                { displayValue: '43', value: '43' },
-              ],
-            },
-          },
-        ],
-      },
-    },
-  });
-
-  const jacket = await prisma.product.create({
-    data: {
-      name: 'Jacket',
-      brand: 'Canada Goose',
-      categoryId: clothesCategory.id,
-      description: '<p>Awesome winter jacket</p>',
-      inStock: true,
-      gallery: [
-        'https://images.canadagoose.com/image/upload/w_480,c_scale,f_auto,q_auto:best/v1576016105/product-image/2409L_61.jpg',
-      ],
-      prices: {
-        create: createPricesNested(430),
-      },
-      attributes: {
-        create: [
-          {
-            name: 'Size',
-            type: 'text',
-            items: {
-              create: [
-                { displayValue: 'Small', value: 'S' },
-                { displayValue: 'Medium', value: 'M' },
-                { displayValue: 'Large', value: 'L' },
-                { displayValue: 'Extra Large', value: 'XL' },
-              ],
-            },
-          },
-        ],
-      },
-    },
-  });
-
-  console.log('✅ Created 4 products');
-
-  console.log('\n🎉 Database seeded successfully!');
+  console.log('\n✅ AgroOrder database seeded successfully!');
+  console.log('\n📊 Created:');
+  console.log('   - 6 categories');
+  console.log(`   - ${productsData.length} products`);
+  console.log('   - 1 admin user');
+  console.log('   - Default settings');
   console.log('\n📧 Admin credentials:');
-  console.log('   Email: admin@example.com');
+  console.log('   Email: admin@agroorder.com');
   console.log('   Password: admin123');
 }
 
 main()
   .catch((e) => {
-    console.error('❌ Error seeding database:', e);
+    console.error('❌ Seed failed:', e);
     process.exit(1);
   })
   .finally(async () => {
     await prisma.$disconnect();
+    await pool.end();
   });

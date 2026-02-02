@@ -1,38 +1,60 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { ArrowRight, Zap, Shield, Globe } from 'lucide-react';
+import { ArrowRight, Truck, Shield, Clock, Leaf } from 'lucide-react';
+import prisma from '@/lib/prisma';
 
-export default function HomePage() {
+async function getCategories() {
+  return prisma.category.findMany({
+    where: { isActive: true },
+    orderBy: { sortOrder: 'asc' },
+  });
+}
+
+async function getFeaturedProducts() {
+  return prisma.product.findMany({
+    where: { isActive: true, isFeatured: true },
+    include: { category: true },
+    take: 6,
+  });
+}
+
+export default async function HomePage() {
+  const [categories, featuredProducts] = await Promise.all([
+    getCategories(),
+    getFeaturedProducts(),
+  ]);
+
   return (
-    <div className="flex flex-col gap-24 pb-24">
+    <div className="flex flex-col gap-16 pb-16">
       {/* Hero Section */}
-      <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden pt-20">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.05),transparent)] z-0" />
+      <section className="relative min-h-[85vh] flex items-center justify-center overflow-hidden bg-gradient-to-br from-emerald-900 via-emerald-800 to-green-900">
+        <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-4xl mx-auto text-center space-y-8">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/20 bg-primary/5 text-primary text-[10px] uppercase tracking-[0.2em] font-bold animate-in fade-in slide-in-from-bottom-4 duration-1000">
-              <Zap className="w-3 h-3" />
-              Next Generation Shopping
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm text-emerald-100 text-sm font-medium">
+              <Leaf className="w-4 h-4" />
+              B2B Wholesale Platform
             </div>
-            <h1 className="text-6xl md:text-8xl font-bold tracking-tighter leading-[0.9] animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200">
-              ESSENTIALS <br />
-              <span className="text-muted-foreground">REDEFINED.</span>
+            <h1 className="text-5xl md:text-7xl font-bold tracking-tight leading-tight text-white">
+              Farm Fresh Produce
+              <br />
+              <span className="text-emerald-300">Wholesale Orders</span>
             </h1>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-300">
-              Curating the finest intersection of cutting-edge technology and timeless fashion. 
-              Designed for the modern minimalist.
+            <p className="text-xl text-emerald-100/80 max-w-2xl mx-auto leading-relaxed">
+              Source quality grains, vegetables, fruits, spices, and dairy products directly from verified suppliers.
+              Bulk ordering made simple for your business.
             </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 animate-in fade-in slide-in-from-bottom-16 duration-1000 delay-500">
-              <Link href="/tech">
-                <Button size="lg" className="rounded-none px-8 h-14 text-sm uppercase tracking-widest font-bold group">
-                  Explore Tech
-                  <ArrowRight className="ml-2 w-4 h-4 transition-transform group-hover:translate-x-1" />
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+              <Link href="/products">
+                <Button size="lg" className="bg-white text-emerald-900 hover:bg-emerald-50 px-8 h-14 text-base font-semibold group">
+                  Browse Products
+                  <ArrowRight className="ml-2 w-5 h-5 transition-transform group-hover:translate-x-1" />
                 </Button>
               </Link>
-              <Link href="/clothes">
-                <Button size="lg" variant="outline" className="rounded-none px-8 h-14 text-sm uppercase tracking-widest font-bold">
-                  Shop Fashion
+              <Link href="/admin/login">
+                <Button size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10 px-8 h-14 text-base font-semibold">
+                  Admin Login
                 </Button>
               </Link>
             </div>
@@ -40,86 +62,177 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Featured Collections */}
+      {/* Categories Grid */}
       <section className="container mx-auto px-4">
-        <div className="grid md:grid-cols-2 gap-8">
-          <Link href="/tech" className="group relative overflow-hidden aspect-[4/5] md:aspect-video bg-muted">
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent z-10" />
-            <div className="absolute inset-0 flex flex-col justify-end p-12 z-20 translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
-              <span className="text-xs uppercase tracking-[0.3em] font-bold text-primary mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-500">Collection 01</span>
-              <h2 className="text-4xl font-bold mb-4 tracking-tighter">FUTURE TECH</h2>
-              <p className="text-muted-foreground max-w-xs group-hover:text-white transition-colors duration-500">
-                Precision engineered devices for a seamless digital life.
-              </p>
-            </div>
-          </Link>
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">Shop by Category</h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto">
+            Explore our wide range of farm produce categories
+          </p>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          {categories.map((category) => (
+            <Link
+              key={category.id}
+              href={`/products?category=${category.name}`}
+              className="group p-6 rounded-2xl bg-gradient-to-br from-muted/50 to-muted hover:from-emerald-50 hover:to-emerald-100 dark:hover:from-emerald-950 dark:hover:to-emerald-900 transition-all duration-300 text-center border border-border/50 hover:border-emerald-200 dark:hover:border-emerald-800"
+            >
+              <div className="text-4xl mb-3">{category.icon}</div>
+              <h3 className="font-semibold text-sm group-hover:text-emerald-700 dark:group-hover:text-emerald-300 transition-colors">
+                {category.displayName}
+              </h3>
+            </Link>
+          ))}
+        </div>
+      </section>
 
-          <Link href="/clothes" className="group relative overflow-hidden aspect-[4/5] md:aspect-video bg-muted/50">
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent z-10" />
-            <div className="absolute inset-0 flex flex-col justify-end p-12 z-20 translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
-              <span className="text-xs uppercase tracking-[0.3em] font-bold text-primary mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-500">Collection 02</span>
-              <h2 className="text-4xl font-bold mb-4 tracking-tighter">MODERN ATTIRE</h2>
-              <p className="text-muted-foreground max-w-xs group-hover:text-white transition-colors duration-500">
-                Minimalist silhouettes crafted from premium sustainable materials.
-              </p>
-            </div>
+      {/* Featured Products */}
+      <section className="container mx-auto px-4">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h2 className="text-3xl md:text-4xl font-bold mb-2">Featured Products</h2>
+            <p className="text-muted-foreground">Top picks for wholesale buyers</p>
+          </div>
+          <Link href="/products">
+            <Button variant="outline" className="hidden sm:flex">
+              View All
+              <ArrowRight className="ml-2 w-4 h-4" />
+            </Button>
           </Link>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {featuredProducts.map((product) => (
+            <Link
+              key={product.id}
+              href={`/products/${product.slug}`}
+              className="group bg-card rounded-2xl border border-border overflow-hidden hover:shadow-lg transition-all duration-300"
+            >
+              <div className="aspect-[4/3] bg-muted relative overflow-hidden">
+                <div className="absolute inset-0 flex items-center justify-center text-6xl">
+                  {product.category.icon}
+                </div>
+                {product.isOrganic && (
+                  <span className="absolute top-3 left-3 px-2 py-1 bg-emerald-500 text-white text-xs font-medium rounded-full">
+                    Organic
+                  </span>
+                )}
+              </div>
+              <div className="p-5">
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <h3 className="font-semibold text-lg group-hover:text-emerald-600 transition-colors">
+                    {product.name}
+                  </h3>
+                  <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
+                    {product.category.displayName}
+                  </span>
+                </div>
+                <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
+                  {product.description}
+                </p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-xl font-bold text-emerald-600">₹{product.pricePerUnit}</span>
+                    <span className="text-sm text-muted-foreground">/{product.unitType.toLowerCase()}</span>
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    MOQ: {product.minOrderQty} {product.unitType.toLowerCase()}
+                  </div>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+        <div className="mt-6 text-center sm:hidden">
+          <Link href="/products">
+            <Button variant="outline">
+              View All Products
+              <ArrowRight className="ml-2 w-4 h-4" />
+            </Button>
+          </Link>
+        </div>
+      </section>
+
+      {/* How It Works */}
+      <section className="bg-muted/30 py-16 border-y border-border/40">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">How It Works</h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Simple wholesale ordering in 4 easy steps
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            {[
+              { icon: '🔍', title: 'Browse Products', desc: 'Explore our catalog of farm produce' },
+              { icon: '📝', title: 'Select Quantity', desc: 'Choose products and enter quantities' },
+              { icon: '📨', title: 'Submit Order', desc: 'Send your order request to us' },
+              { icon: '🚚', title: 'Get Delivery', desc: 'Receive products at your location' },
+            ].map((step, index) => (
+              <div key={index} className="text-center">
+                <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-900 flex items-center justify-center text-3xl mx-auto mb-4">
+                  {step.icon}
+                </div>
+                <div className="text-sm font-medium text-emerald-600 mb-2">Step {index + 1}</div>
+                <h3 className="font-semibold mb-2">{step.title}</h3>
+                <p className="text-sm text-muted-foreground">{step.desc}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
       {/* Trust Badges */}
-      <section className="bg-muted/30 py-24 border-y border-border/40">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-16">
-            <div className="space-y-4 text-center">
-              <div className="w-12 h-12 rounded-full bg-primary/5 flex items-center justify-center mx-auto mb-6">
-                <Shield className="w-6 h-6 text-primary" />
-              </div>
-              <h3 className="text-lg font-bold tracking-tight">SECURE TRANSACTIONS</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Every purchase is protected by industry-leading encryption and fraud prevention.
+      <section className="container mx-auto px-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="flex items-start gap-4 p-6 rounded-2xl bg-muted/30">
+            <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-900 flex items-center justify-center shrink-0">
+              <Truck className="w-6 h-6 text-emerald-600" />
+            </div>
+            <div>
+              <h3 className="font-semibold mb-1">Pan-India Delivery</h3>
+              <p className="text-sm text-muted-foreground">
+                Reliable delivery across all major cities and towns
               </p>
             </div>
-            <div className="space-y-4 text-center">
-              <div className="w-12 h-12 rounded-full bg-primary/5 flex items-center justify-center mx-auto mb-6">
-                <Globe className="w-6 h-6 text-primary" />
-              </div>
-              <h3 className="text-lg font-bold tracking-tight">GLOBAL DELIVERY</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Fast, reliable shipping to over 150 countries with real-time tracking.
+          </div>
+          <div className="flex items-start gap-4 p-6 rounded-2xl bg-muted/30">
+            <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-900 flex items-center justify-center shrink-0">
+              <Shield className="w-6 h-6 text-emerald-600" />
+            </div>
+            <div>
+              <h3 className="font-semibold mb-1">Verified Suppliers</h3>
+              <p className="text-sm text-muted-foreground">
+                All suppliers are verified for quality standards
               </p>
             </div>
-            <div className="space-y-4 text-center">
-              <div className="w-12 h-12 rounded-full bg-primary/5 flex items-center justify-center mx-auto mb-6">
-                <Zap className="w-6 h-6 text-primary" />
-              </div>
-              <h3 className="text-lg font-bold tracking-tight">24/7 SUPPORT</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Our dedicated concierge team is available around the clock to assist you.
+          </div>
+          <div className="flex items-start gap-4 p-6 rounded-2xl bg-muted/30">
+            <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-900 flex items-center justify-center shrink-0">
+              <Clock className="w-6 h-6 text-emerald-600" />
+            </div>
+            <div>
+              <h3 className="font-semibold mb-1">Quick Response</h3>
+              <p className="text-sm text-muted-foreground">
+                Get order confirmations within 24 hours
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Newsletter */}
+      {/* CTA Section */}
       <section className="container mx-auto px-4">
-        <div className="max-w-4xl mx-auto bg-primary text-primary-foreground p-12 md:p-24 text-center space-y-8 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
-          <h2 className="text-4xl md:text-5xl font-bold tracking-tighter">JOIN THE INNER CIRCLE</h2>
-          <p className="text-primary-foreground/70 max-w-md mx-auto">
-            Be the first to know about new arrivals, limited collections, and exclusive events.
+        <div className="bg-gradient-to-r from-emerald-600 to-green-600 rounded-3xl p-8 md:p-12 text-center text-white">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to Order?</h2>
+          <p className="text-emerald-100 max-w-xl mx-auto mb-8">
+            Browse our complete catalog of farm produce and submit your wholesale order today.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
-            <input 
-              type="email" 
-              placeholder="Enter your email" 
-              className="flex-1 bg-white/10 border border-white/20 px-6 h-12 outline-none focus:border-white/40 transition-colors"
-            />
-            <Button variant="secondary" className="rounded-none h-12 px-8 uppercase tracking-widest font-bold">
-              Subscribe
+          <Link href="/products">
+            <Button size="lg" className="bg-white text-emerald-700 hover:bg-emerald-50 px-8 h-14 text-base font-semibold">
+              Start Shopping
+              <ArrowRight className="ml-2 w-5 h-5" />
             </Button>
-          </div>
+          </Link>
         </div>
       </section>
     </div>

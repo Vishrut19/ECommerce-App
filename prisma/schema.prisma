@@ -1,5 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// This is your Prisma schema file for AgroOrder
+// B2B Farm Produce Wholesale Ordering Platform
 
 generator client {
   provider = "prisma-client-js"
@@ -9,26 +9,29 @@ datasource db {
   provider = "postgresql"
 }
 
-// User model for authentication
+// ============================================
+// USER & AUTHENTICATION
+// ============================================
 
 model User {
   id            String    @id @default(cuid())
   email         String    @unique
   name          String?
   password      String?
-  role          String    @default("user") // "user" or "admin"
+  role          String    @default("buyer") // "buyer" or "admin"
+  phone         String?
+  company       String?
+  address       String?   @db.Text
   emailVerified Boolean   @default(false)
+  image         String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   sessions      Session[]
   accounts      Account[]
-
-  image String?
+  orders        Order[]
 
   @@map("users")
 }
-
-// Session model for Better Auth
 
 model Session {
   id        String   @id @default(cuid())
@@ -41,31 +44,13 @@ model Session {
   updatedAt DateTime @updatedAt
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@map("sessions")
   @@index([userId])
+  @@map("sessions")
 }
 
-// Account model for Better Auth (supports both OAuth and credentials)
-
 model Account {
-  id                String   @id @default(cuid())
-  userId            String
-  type              String?  // Optional - not used by Better Auth
-  provider          String?  // Optional - not used by Better Auth
-  providerAccountId String?  // Optional - not used by Better Auth
-  password          String? // For credential provider only
-  refresh_token     String?
-  access_token      String?
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String?
-  session_state     String?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  // Better Auth fields
+  id                    String    @id @default(cuid())
+  userId                String
   accountId             String
   providerId            String
   accessToken           String?
@@ -73,131 +58,13 @@ model Account {
   idToken               String?
   accessTokenExpiresAt  DateTime?
   refreshTokenExpiresAt DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([accountId, providerId])
-  @@map("accounts")
   @@index([userId])
-}
-
-
-// Category model
-
-model Category {
-  id        String    @id @default(cuid())
-  name      String    @unique // "tech" or "clothes"
-  title     String // Display title
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  products  Product[]
-
-  @@map("categories")
-}
-
-// Product model
-
-model Product {
-  id          String             @id @default(cuid())
-  name        String
-  brand       String
-  categoryId  String
-  description String             @db.Text
-  inStock     Boolean            @default(true)
-  gallery     String[] // Array of image URLs
-  createdAt   DateTime           @default(now())
-  updatedAt   DateTime           @updatedAt
-  category    Category           @relation(fields: [categoryId], references: [id])
-  prices      ProductPrice[]
-  attributes  ProductAttribute[]
-
-  @@map("products")
-}
-
-// Product Price model (for multi-currency support)
-
-model ProductPrice {
-  id           String   @id @default(cuid())
-  productId    String
-  currencyCode String // "USD", "GBP", etc.
-  amount       Float
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  product      Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-
-  @@unique([productId, currencyCode])
-  @@map("product_prices")
-}
-
-// Product Attribute model (for colors, sizes, etc.)
-
-model ProductAttribute {
-  id        String                 @id @default(cuid())
-  productId String
-  name      String // "Color", "Size", "Capacity"
-  type      String // "text" or "swatch"
-  createdAt DateTime               @default(now())
-  updatedAt DateTime               @updatedAt
-  product   Product                @relation(fields: [productId], references: [id], onDelete: Cascade)
-  items     ProductAttributeItem[]
-
-  @@map("product_attributes")
-}
-
-// Product Attribute Item model
-
-model ProductAttributeItem {
-  id           String           @id @default(cuid())
-  attributeId  String
-  displayValue String
-  value        String
-  createdAt    DateTime         @default(now())
-  updatedAt    DateTime         @updatedAt
-  attribute    ProductAttribute @relation(fields: [attributeId], references: [id], onDelete: Cascade)
-
-  @@map("product_attribute_items")
-}
-
-// Currency model
-
-model Currency {
-  id        String   @id @default(cuid())
-  code      String   @unique // "USD", "GBP", etc.
-  symbol    String // "$", "£", etc.
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("currencies")
-}
-
-// Order model (for future implementation)
-
-model Order {
-  id        String      @id @default(cuid())
-  userId    String?
-  total     Float
-  currency  String
-  status    String      @default("pending") // "pending", "processing", "completed", "cancelled"
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
-  items     OrderItem[]
-
-  @@map("orders")
-}
-
-// Order Item model
-
-model OrderItem {
-  id          String   @id @default(cuid())
-  orderId     String
-  productId   String
-  productName String
-  quantity    Int
-  price       Float
-  attributes  Json? // Store selected attributes as JSON
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-
-  @@map("order_items")
+  @@map("accounts")
 }
 
 model Verification {
@@ -210,4 +77,136 @@ model Verification {
 
   @@index([identifier])
   @@map("verification")
+}
+
+// ============================================
+// PRODUCT CATALOG
+// ============================================
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String    @unique // slug: "grains-pulses", "vegetables", etc.
+  displayName String    // "Grains & Pulses", "Vegetables", etc.
+  icon        String?   // emoji or icon name
+  description String?   @db.Text
+  isOrganic   Boolean   @default(false)
+  sortOrder   Int       @default(0)
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  products    Product[]
+
+  @@map("categories")
+}
+
+enum UnitType {
+  KG
+  TON
+  BAG
+  CRATE
+  DOZEN
+  PIECE
+  LITER
+}
+
+model Product {
+  id            String      @id @default(cuid())
+  name          String
+  slug          String      @unique
+  description   String?     @db.Text
+  categoryId    String
+  pricePerUnit  Float       // Price in base currency (INR)
+  unitType      UnitType    @default(KG)
+  minOrderQty   Int         @default(1)
+  stockQty      Int         @default(0)
+  images        String[]    // Array of image URLs
+  supplierName  String?
+  isOrganic     Boolean     @default(false)
+  isActive      Boolean     @default(true)
+  isFeatured    Boolean     @default(false)
+  lowStockAlert Int         @default(10)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  category      Category    @relation(fields: [categoryId], references: [id])
+  orderItems    OrderItem[]
+
+  @@index([categoryId])
+  @@index([isActive, isFeatured])
+  @@map("products")
+}
+
+// ============================================
+// ORDERS
+// ============================================
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  DELIVERED
+  CANCELLED
+}
+
+model Order {
+  id           String      @id @default(cuid())
+  orderNumber  String      @unique
+  userId       String?
+  // Buyer info (for guest orders or stored at order time)
+  buyerName    String
+  buyerEmail   String
+  buyerPhone   String
+  buyerCompany String?
+  buyerAddress String?     @db.Text
+  // Order details
+  totalAmount  Float
+  status       OrderStatus @default(PENDING)
+  notes        String?     @db.Text
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  user         User?       @relation(fields: [userId], references: [id])
+  items        OrderItem[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("orders")
+}
+
+model OrderItem {
+  id           String   @id @default(cuid())
+  orderId      String
+  productId    String
+  productName  String   // Store name at time of order
+  quantity     Int
+  unitType     UnitType
+  pricePerUnit Float
+  subtotal     Float
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  order        Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product      Product  @relation(fields: [productId], references: [id])
+
+  @@index([orderId])
+  @@index([productId])
+  @@map("order_items")
+}
+
+// ============================================
+// SETTINGS
+// ============================================
+
+model Settings {
+  id                     String   @id @default("default")
+  companyName            String   @default("AgroOrder")
+  companyEmail           String?
+  companyPhone           String?
+  whatsappNumber         String?
+  companyAddress         String?  @db.Text
+  orderNotificationEmail String?
+  currency               String   @default("INR")
+  currencySymbol         String   @default("₹")
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  @@map("settings")
 }

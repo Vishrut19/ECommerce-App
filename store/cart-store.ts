@@ -1,116 +1,95 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { CartItem, Product, Currency } from '@/types';
+
+// AgroOrder Cart Store
+// Simplified for B2B wholesale ordering
+
+interface CartItem {
+  productId: string;
+  productName: string;
+  quantity: number;
+  pricePerUnit: number;
+  unitType: string;
+  minOrderQty: number;
+}
+
+interface Currency {
+  label: string;
+  symbol: string;
+}
 
 interface CartStore {
   items: CartItem[];
   selectedCurrency: Currency;
-  
-  // Cart operations
-  addItem: (product: Product, selectedAttributes: Record<string, string>) => void;
-  removeItem: (productId: string, selectedAttributes: Record<string, string>) => void;
-  updateQuantity: (productId: string, selectedAttributes: Record<string, string>, quantity: number) => void;
+  addItem: (item: CartItem) => void;
+  removeItem: (productId: string) => void;
+  updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
-  
-  // Currency operations
-  setSelectedCurrency: (currency: Currency) => void;
-  
-  // Computed values
   getTotal: () => number;
   getItemCount: () => number;
+  setCurrency: (currency: Currency) => void;
 }
-
-// Helper to create a unique key for cart items
-const getItemKey = (productId: string, selectedAttributes: Record<string, string>) => {
-  return `${productId}-${JSON.stringify(selectedAttributes)}`;
-};
 
 export const useCartStore = create<CartStore>()(
   persist(
     (set, get) => ({
       items: [],
-      selectedCurrency: { label: 'USD', symbol: '$' },
-      
-      addItem: (product, selectedAttributes) => {
+      selectedCurrency: { label: 'INR', symbol: '₹' },
+
+      addItem: (item) =>
         set((state) => {
-          const existingItemIndex = state.items.findIndex(
-            (item) =>
-              item.product.id === product.id &&
-              JSON.stringify(item.selectedAttributes) === JSON.stringify(selectedAttributes)
+          const existingIndex = state.items.findIndex(
+            (i) => i.productId === item.productId
           );
-          
-          if (existingItemIndex > -1) {
-            // Item exists, increase quantity
+
+          if (existingIndex >= 0) {
             const newItems = [...state.items];
-            newItems[existingItemIndex].quantity += 1;
+            newItems[existingIndex].quantity = item.quantity;
             return { items: newItems };
-          } else {
-            // New item
-            return {
-              items: [...state.items, { product, selectedAttributes, quantity: 1 }],
-            };
           }
-        });
-      },
-      
-      removeItem: (productId, selectedAttributes) => {
+
+          return { items: [...state.items, item] };
+        }),
+
+      removeItem: (productId) =>
         set((state) => ({
-          items: state.items.filter(
-            (item) =>
-              !(
-                item.product.id === productId &&
-                JSON.stringify(item.selectedAttributes) === JSON.stringify(selectedAttributes)
-              )
-          ),
-        }));
-      },
-      
-      updateQuantity: (productId, selectedAttributes, quantity) => {
+          items: state.items.filter((item) => item.productId !== productId),
+        })),
+
+      updateQuantity: (productId, quantity) =>
         set((state) => {
           if (quantity <= 0) {
-            // Remove item if quantity is 0 or less
             return {
-              items: state.items.filter(
-                (item) =>
-                  !(
-                    item.product.id === productId &&
-                    JSON.stringify(item.selectedAttributes) === JSON.stringify(selectedAttributes)
-                  )
-              ),
+              items: state.items.filter((item) => item.productId !== productId),
             };
           }
-          
-          const newItems = state.items.map((item) =>
-            item.product.id === productId &&
-            JSON.stringify(item.selectedAttributes) === JSON.stringify(selectedAttributes)
-              ? { ...item, quantity }
-              : item
-          );
-          
-          return { items: newItems };
-        });
-      },
-      
+
+          return {
+            items: state.items.map((item) =>
+              item.productId === productId ? { ...item, quantity } : item
+            ),
+          };
+        }),
+
       clearCart: () => set({ items: [] }),
-      
-      setSelectedCurrency: (currency) => set({ selectedCurrency: currency }),
-      
+
       getTotal: () => {
-        const state = get();
-        return state.items.reduce((total, item) => {
-          const price = item.product.prices.find(
-            (p) => p.currency.label === state.selectedCurrency.label
-          );
-          return total + (price?.amount || 0) * item.quantity;
-        }, 0);
+        const { items } = get();
+        return items.reduce(
+          (total, item) => total + item.pricePerUnit * item.quantity,
+          0
+        );
       },
-      
+
       getItemCount: () => {
-        return get().items.reduce((count, item) => count + item.quantity, 0);
+        const { items } = get();
+        return items.reduce((count, item) => count + item.quantity, 0);
       },
+
+      setCurrency: (currency) => set({ selectedCurrency: currency }),
     }),
     {
-      name: 'cart-storage',
+      name: 'agroorder-cart',
     }
   )
 );

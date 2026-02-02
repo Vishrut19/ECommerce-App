@@ -1,6 +1,7 @@
 {
-  "name": "ecommerce-nextjs",
-  "version": "0.1.0",
+  "name": "agroorder",
+  "version": "1.0.0",
+  "description": "AgroOrder - B2B Farm Produce Wholesale Platform",
   "private": true,
   "scripts": {
     "dev": "next dev --webpack",
@@ -8,9 +9,9 @@
     "start": "next start",
     "lint": "eslint",
     "init-db": "tsx scripts/init-db.ts",
-    "create-admin": "tsx scripts/create-admin.ts",
-    "check-admin": "tsx scripts/check-admin.ts",
-    "postinstall": "prisma generate"
+    "db:migrate": "npx prisma migrate dev",
+    "db:seed": "npx prisma db seed",
+    "db:studio": "npx prisma studio"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -22,11 +23,11 @@
     "@radix-ui/react-separator": "^1.1.8",
     "@radix-ui/react-slot": "^1.2.4",
     "@radix-ui/react-switch": "^1.2.6",
+    "@supabase/ssr": "^0.8.0",
+    "@supabase/supabase-js": "^2.93.3",
     "@tanstack/react-query": "^5.90.20",
     "@tanstack/react-table": "^8.21.3",
     "bcryptjs": "^3.0.3",
-    "better-auth": "^1.4.18",
-    "better-sqlite3": "^12.6.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dotenv": "^17.2.3",
@@ -49,7 +50,6 @@
     "@tanstack/eslint-plugin-query": "^5.91.4",
     "@tanstack/react-query-devtools": "^5.91.3",
     "@types/bcryptjs": "^2.4.6",
-    "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^20",
     "@types/pg": "^8.16.0",
     "@types/react": "^19",
